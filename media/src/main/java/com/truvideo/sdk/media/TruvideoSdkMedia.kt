@@ -10,6 +10,7 @@ import com.amazonaws.mobile.client.AWSMobileClient
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferListener
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferNetworkLossHandler
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferObserver
+import com.amazonaws.mobileconnectors.s3.transferutility.TransferState
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferUtility
 import com.amazonaws.regions.Region
 import com.amazonaws.regions.Regions
@@ -24,7 +25,7 @@ import java.io.OutputStream
 
 object TruvideoSdkMedia {
     fun upload(
-        context: Context, listener: TransferListener, fileUri: Uri, accelerate: Boolean
+        context: Context, listener: TruvideoSdkTransferListener, fileUri: Uri, accelerate: Boolean
     ): Int {
         // TODO remove hardcoded values
         val bucketName: String = "luis-piura-bucket-test"
@@ -68,7 +69,23 @@ object TruvideoSdkMedia {
                 bucketName, awsPath, fileToUpload, objectMetadata
             )
 
-            transferObserver.setTransferListener(listener)
+
+            transferObserver.setTransferListener(object : TransferListener {
+                override fun onStateChanged(id: Int, state: TransferState) {
+                    if (state == TransferState.COMPLETED) {
+                        listener.onComplete(id)
+                    }
+                }
+
+                override fun onProgressChanged(id: Int, bytesCurrent: Long, bytesTotal: Long) {
+                    val progress = bytesCurrent * 100 / bytesTotal
+                    listener.onProgressChanged(id, progress.toInt())
+                }
+
+                override fun onError(id: Int, ex: Exception) {
+                    listener.onError(id, ex)
+                }
+            })
             return transferObserver.id
         }
         return -1
