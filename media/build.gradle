@@ -11,8 +11,8 @@ android {
     defaultConfig {
         minSdk 24
         targetSdk 33
-        versionCode 1
-        versionName "0.1.1"
+        versionCode 7
+        versionName "0.1.7"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -43,6 +43,12 @@ dependencies {
     implementation 'androidx.lifecycle:lifecycle-extensions:2.2.0'
     implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.6.1'
     implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.6.1'
+
+    implementation 'com.amazonaws:aws-android-sdk-mobile-client:2.16.6'
+    implementation 'com.amazonaws:aws-android-sdk-s3:2.44.0'
+    implementation 'com.amazonaws:aws-android-sdk-cognito:2.16.6'
+    implementation 'com.amazonaws:aws-android-sdk-auth-userpools:2.16.6'
+    implementation 'com.amazonaws:aws-android-sdk-auth-ui:2.6.10'
 
     testImplementation 'junit:junit:4.13.2'
     testImplementation "androidx.test:core:1.5.0"
