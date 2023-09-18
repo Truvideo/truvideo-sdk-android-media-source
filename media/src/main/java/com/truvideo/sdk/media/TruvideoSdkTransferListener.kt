@@ -6,7 +6,7 @@ interface TruvideoSdkTransferListener {
      *
      * @param id The id of the transfer record.
      */
-    fun onComplete(id: Int)
+    fun onComplete(id: String)
 
     /**
      * Called when more bytes are transferred.
@@ -14,7 +14,7 @@ interface TruvideoSdkTransferListener {
      * @param id The id of the transfer record.
      * @param progress the percentage transferred currently.
      */
-    fun onProgressChanged(id: Int, progress: Int)
+    fun onProgressChanged(id: String, progress: Int)
 
     /**
      * Called when an exception happens.
@@ -22,5 +22,5 @@ interface TruvideoSdkTransferListener {
      * @param id The id of the transfer record.
      * @param ex An exception object.
      */
-    fun onError(id: Int, ex: Exception)
+    fun onError(id: String, ex: Exception)
 }
