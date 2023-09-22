@@ -20,6 +20,8 @@ import com.amazonaws.services.s3.model.ObjectMetadata
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import truvideo.sdk.common.TruvideoSdk
+import truvideo.sdk.common.exception.TruvideoSdkAuthenticationRequiredException
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
@@ -31,6 +33,11 @@ object TruvideoSdkMedia {
     fun upload(
         context: Context, listener: TruvideoSdkTransferListener, fileUri: Uri, accelerate: Boolean
     ): String {
+        val isAuthenticated = TruvideoSdk.instance.auth.isAuthenticated
+        if (!isAuthenticated) {
+            throw TruvideoSdkAuthenticationRequiredException()
+        }
+
         val mediaLocalKey = UUID.randomUUID().toString()
 
         val call: Call<TruvideoSdkUploadCredentials?>? =
