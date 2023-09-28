@@ -11,8 +11,8 @@ android {
     defaultConfig {
         minSdk 24
         targetSdk 33
-        versionCode 50
-        versionName "0.1.50"
+        versionCode 60
+        versionName "0.1.60"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -49,9 +49,6 @@ dependencies {
     implementation 'com.amazonaws:aws-android-sdk-cognito:2.16.6'
     implementation 'com.amazonaws:aws-android-sdk-auth-userpools:2.16.6'
     implementation 'com.amazonaws:aws-android-sdk-auth-ui:2.6.10'
-    implementation 'com.squareup.retrofit2:retrofit:2.9.0'
-    implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
-
 
     testImplementation 'junit:junit:4.13.2'
     testImplementation "androidx.test:core:1.5.0"
@@ -62,7 +59,7 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
 
     //Common
-    implementation 'com.github.Truvideo:truvideo-sdk-android-common:0.0.7'
+    implementation 'com.github.Truvideo:truvideo-sdk-android-common:0.0.18'
 
     var ktorVersion = "2.3.2"
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.2")

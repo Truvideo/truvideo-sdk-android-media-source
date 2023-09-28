@@ -5,8 +5,9 @@ interface TruvideoSdkTransferListener {
      * Called when the transfer finishes correctly.
      *
      * @param id The id of the transfer record.
+     * @param url The media url.
      */
-    fun onComplete(id: String)
+    fun onComplete(id: String, url: String)
 
     /**
      * Called when more bytes are transferred.
