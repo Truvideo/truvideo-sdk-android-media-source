@@ -2,9 +2,12 @@
 
 package com.truvideo.sdk.media
 
+import android.content.ContentResolver
 import android.content.Context
 import android.net.Uri
 import android.provider.MediaStore
+import android.util.Log
+import android.webkit.MimeTypeMap
 import com.amazonaws.ClientConfiguration
 import com.amazonaws.auth.CognitoCachingCredentialsProvider
 import com.amazonaws.mobile.client.AWSMobileClient
@@ -18,13 +21,13 @@ import com.amazonaws.regions.Regions
 import com.amazonaws.services.s3.AmazonS3Client
 import com.amazonaws.services.s3.S3ClientOptions
 import io.ktor.util.toUpperCasePreservingASCIIRules
-import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import org.json.JSONObject
 import truvideo.sdk.common.TruvideoSdk
 import truvideo.sdk.common.exception.TruvideoSdkAuthenticationRequiredException
+import truvideo.sdk.common.exception.TruvideoSdkException
 import truvideo.sdk.common.model.TruvideoSdkStorageCredentials
 import java.io.File
 import java.io.FileOutputStream
@@ -34,6 +37,9 @@ import java.util.UUID
 
 
 object TruvideoSdkMedia {
+
+    var scope = CoroutineScope(Dispatchers.IO)
+
     fun upload(
         context: Context, listener: TruvideoSdkTransferListener, fileUri: Uri
     ): String {
@@ -47,15 +53,35 @@ object TruvideoSdkMedia {
         TruvideoSdk.instance.auth.settings?.mediaStorageCredentials?.let {
             uploadVideo(context, it, listener, mediaLocalKey, fileUri)
         } ?: run {
-            // TODO exception
-            listener.onError(mediaLocalKey, java.lang.Exception("to be defined 1"))
+            listener.onError(mediaLocalKey, TruvideoSdkException("Credentials not found"))
         }
 
         return mediaLocalKey
     }
 
-    //TODO review this coroutine
-    @OptIn(DelicateCoroutinesApi::class)
+    private fun getMimeType(uri: Uri, contentResolver: ContentResolver): String {
+        return contentResolver.getType(uri) ?: "unknown/unknown"
+    }
+
+    private fun isPhotoOrVideo(uri: Uri, contentResolver: ContentResolver): Boolean {
+        // Get the MIME type of the file from the URI
+        val mimeType = contentResolver.getType(uri)
+            ?: // If we cannot determine the MIME type, consider it neither a photo nor a video
+            return false
+
+        // Check if the MIME type is null
+
+        // Use MimeTypeMap to get the file extension from the MIME type
+        val extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType)
+
+        // Check if the file extension is one of the common image or video extensions
+        val isImage = extension?.startsWith("image/") == true
+        val isVideo = extension?.startsWith("video/") == true
+
+        // Return true if it's an image or video, false otherwise
+        return isImage || isVideo
+    }
+
     private fun uploadVideo(
         context: Context,
         credentials: TruvideoSdkStorageCredentials,
@@ -63,6 +89,14 @@ object TruvideoSdkMedia {
         mediaLocalKey: String,
         fileUri: Uri
     ) {
+
+        val contentResolver = context.contentResolver
+
+        if (!isPhotoOrVideo(fileUri, contentResolver)) {
+            listener.onError(mediaLocalKey, TruvideoSdkException("Invalid file"))
+            return
+        }
+
         var mediaLocalId = -1
 
         val bucketName: String = credentials.bucketName
@@ -71,7 +105,8 @@ object TruvideoSdkMedia {
         val accelerate: Boolean = credentials.accelerate
 
         val projection = arrayOf(MediaStore.MediaColumns.DISPLAY_NAME)
-        val cursor = context.contentResolver.query(fileUri, projection, null, null, null)
+        
+        val cursor = contentResolver.query(fileUri, projection, null, null, null)
 
         var fileExtension = "mp4"
         if (cursor != null && cursor.moveToFirst()) {
@@ -93,8 +128,7 @@ object TruvideoSdkMedia {
         val fileName = "${UUID.randomUUID()}.$fileExtension"
 
         val client = getClient(context, region, poolID, accelerate)
-        val transferUtility: TransferUtility =
-            getTransferUtility(context, client, region, poolID, accelerate)
+        val transferUtility: TransferUtility = getTransferUtility(context, client)
 
         val awsPath = if (credentials.folder.trim().isNotEmpty()) {
             "${credentials.folder.trim()}/$fileName"
@@ -102,7 +136,7 @@ object TruvideoSdkMedia {
             fileName
         }
 
-        val inputStream: InputStream? = context.contentResolver.openInputStream(fileUri)
+        val inputStream: InputStream? = contentResolver.openInputStream(fileUri)
 
         inputStream?.let {
             val fileToUpload = File(
@@ -128,23 +162,16 @@ object TruvideoSdkMedia {
             transferObserver.setTransferListener(object : TransferListener {
                 var size = 0L
 
-                fun getMimeType(uri: Uri, context: Context): String {
-                    val contentResolver = context.contentResolver
-                    return contentResolver.getType(uri) ?: "unknown/unknown"
-                }
-
                 override fun onStateChanged(id: Int, state: TransferState) {
                     if (state == TransferState.COMPLETED) {
-                        GlobalScope.launch(Dispatchers.IO) {
+                        scope.launch {
                             val url = client.getUrl(bucketName, awsPath).toString()
-                            listener.onComplete(mediaLocalKey, url)
 
-                            //TODO createMedia
-//                            val type = getMimeType(
-//                                fileUri, context
-//                            ).split("/")[0].toUpperCasePreservingASCIIRules()
-//
-//                            createMedia(listener, mediaLocalKey, fileName, url, size, type)
+                            val type = getMimeType(
+                                fileUri, contentResolver
+                            ).split("/")[0].toUpperCasePreservingASCIIRules()
+
+                            createMedia(listener, mediaLocalKey, fileName, url, size, type)
                         }
                     }
                 }
@@ -162,6 +189,8 @@ object TruvideoSdkMedia {
                 }
             })
             mediaLocalId = transferObserver.id
+        } ?: run {
+            //todo emit error fileNotFound
         }
 
         storeMediaLocalValues(context, mediaLocalKey, mediaLocalId)
@@ -175,11 +204,17 @@ object TruvideoSdkMedia {
         size: Long,
         type: String?
     ) {
-        val token = TruvideoSdk.instance.auth.authentication?.accessToken
-        //TODO return exception
+        TruvideoSdk.instance.configuration.log.enabled = true
+        TruvideoSdk.instance.configuration.log.printEnabled = true
+
+        var token = TruvideoSdk.instance.auth.authentication?.accessToken
+        if (token.isNullOrEmpty()) {
+            TruvideoSdk.instance.auth.refreshAuthentication()
+        }
+        token = TruvideoSdk.instance.auth.authentication?.accessToken
         if (token.isNullOrEmpty()) {
             listener.onError(
-                mediaLocalKey, java.lang.Exception("to be defined 2")
+                mediaLocalKey, TruvideoSdkAuthenticationRequiredException()
             )
             return
         }
@@ -187,32 +222,37 @@ object TruvideoSdkMedia {
             "Authorization" to "Bearer $token",
             "Content-Type" to "application/json",
         )
-        val body = mapOf(
-            "title" to title,
-            "type" to type,
-            "url" to url,
-            "resolution" to "LOW",
-            "size" to size,
+        val body = JSONObject()
+        body.put("title", title)
+        body.put("type", type)
+        body.put("url", url)
+        body.put("resolution", "LOW")
+        body.put("size", size)
+
+        Log.d("TruvideoSdkMedia", "createMedia - headers: $headers")
+        Log.d("TruvideoSdkMedia", "createMedia - body: $body")
+        val response = TruvideoSdk.instance.http.post(
+            url = "https://sdk-mobile-api-beta.truvideo.com:443/api/media",
+            headers = headers,
+            body = body.toString(),
+            retry = true,
+            printLogs = true
         )
-        val response = withContext(Dispatchers.IO) {
-            TruvideoSdk.instance.http.post(
-                url = "https://sdk-mobile-api-beta.truvideo.com:443/api/media",
-                headers = headers,
-                body = body,
-                retry = false,
-                printLogs = false
-            )
-        }
+
+        Log.d("TruvideoSdkMedia", "createMedia - response: $response")
 
         if (response?.isSuccess == true) {
             response.body.let {
+                // TODO get url and return it
                 listener.onComplete(mediaLocalKey, url)
             }
         } else {
-            //TODO add exception
+            Log.w(
+                "TruvideoSdkMedia",
+                "to be defined 3 | code: ${response?.code} | body: ${response?.body}"
+            )
             listener.onError(
-                mediaLocalKey,
-                java.lang.Exception("to be defined 3 | code: ${response?.code} | body: ${response?.body}")
+                mediaLocalKey, TruvideoSdkException("Error creating media")
             )
         }
     }
@@ -245,11 +285,7 @@ object TruvideoSdkMedia {
     }
 
     private fun getTransferUtility(
-        context: Context,
-        client: AmazonS3Client,
-        region: String,
-        poolID: String,
-        accelerate: Boolean
+        context: Context, client: AmazonS3Client
     ): TransferUtility {
         TransferNetworkLossHandler.getInstance(context)
         val awsConfiguration = AWSMobileClient.getInstance().configuration
