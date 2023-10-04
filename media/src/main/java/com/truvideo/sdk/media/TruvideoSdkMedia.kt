@@ -8,11 +8,10 @@ import android.net.Uri
 import android.provider.MediaStore
 import android.util.Log
 import com.amazonaws.ClientConfiguration
-import com.amazonaws.auth.CognitoCachingCredentialsProvider
+import com.amazonaws.auth.CognitoCredentialsProvider
 import com.amazonaws.mobile.client.AWSMobileClient
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferListener
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferNetworkLossHandler
-import com.amazonaws.mobileconnectors.s3.transferutility.TransferObserver
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferState
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferUtility
 import com.amazonaws.regions.Region
@@ -37,22 +36,27 @@ import java.util.UUID
 
 object TruvideoSdkMedia {
 
-    var scope = CoroutineScope(Dispatchers.IO)
+    private val common = TruvideoSdk.instance
+
+    private var scope = CoroutineScope(Dispatchers.IO)
 
     fun upload(
-        context: Context, listener: TruvideoSdkTransferListener, fileUri: Uri
+        context: Context,
+        listener: TruvideoSdkTransferListener,
+        fileUri: Uri
     ): String {
-        val isAuthenticated = TruvideoSdk.instance.auth.isAuthenticated
+        val isAuthenticated = common.auth.isAuthenticated
         if (!isAuthenticated) {
             throw TruvideoSdkAuthenticationRequiredException()
         }
 
         val mediaLocalKey = UUID.randomUUID().toString()
 
-        TruvideoSdk.instance.auth.settings?.credentials?.let {
-            uploadVideo(context, it, listener, mediaLocalKey, fileUri)
-        } ?: run {
+        val credentials = common.auth.settings?.credentials
+        if (credentials == null) {
             listener.onError(mediaLocalKey, TruvideoSdkException("Credentials not found"))
+        } else {
+            uploadVideo(context, credentials, listener, mediaLocalKey, fileUri)
         }
 
         return mediaLocalKey
@@ -81,30 +85,28 @@ object TruvideoSdkMedia {
         mediaLocalKey: String,
         fileUri: Uri
     ) {
-
         val contentResolver = context.contentResolver
 
+        //TODO: move 'isPhotoOrVideo' to a util class. Example: FileUriUtils.isPhotoOrVideo
         if (!isPhotoOrVideo(fileUri, contentResolver)) {
             listener.onError(mediaLocalKey, TruvideoSdkException("Invalid file"))
             return
         }
 
-        var mediaLocalId = -1
-
         val bucketName: String = credentials.bucketName
-        val poolID: String = credentials.identityID
+        val poolID: String = credentials.identityPoolID
         val region: String = credentials.region
-        //TODO
-        // val accelerate: Boolean = credentials.accelerate
-        val accelerate: Boolean = false
         val folder: String = credentials.bucketFolderMedia
 
+        //TODO: check accelerate
+        val accelerate = false
+
         Log.d("uploadVideo", "uploadVideo: credentials: $credentials")
+
+        //TODO: move this to a util class. Example: FileUriUtils.getExtension(fileUri)
+        var fileExtension = ""
         val projection = arrayOf(MediaStore.MediaColumns.DISPLAY_NAME)
-
         val cursor = contentResolver.query(fileUri, projection, null, null, null)
-
-        var fileExtension = "mp4"
         if (cursor != null && cursor.moveToFirst()) {
             var columnIndex = cursor.getColumnIndex(MediaStore.MediaColumns.DISPLAY_NAME)
             if (columnIndex < 0) {
@@ -121,9 +123,13 @@ object TruvideoSdkMedia {
             }
         }
 
-        val fileName = "${UUID.randomUUID()}.$fileExtension"
+        if (fileExtension.trim().isEmpty()) {
+            listener.onError(mediaLocalKey, TruvideoSdkException("File extension not found"))
+            return
+        }
 
-        val client = getClient(context, region, poolID, accelerate)
+        val fileName = "${UUID.randomUUID()}.$fileExtension"
+        val client = getClient(region, poolID, accelerate)
         val transferUtility: TransferUtility = getTransferUtility(context, client)
 
         val awsPath = if (folder.isNotEmpty()) {
@@ -132,64 +138,63 @@ object TruvideoSdkMedia {
             fileName
         }
 
+        // TODO: move this to a util class. Example: FileUriUtils.createTempFile(fileUri)
         val inputStream: InputStream? = contentResolver.openInputStream(fileUri)
+        if (inputStream == null) {
+            listener.onError(mediaLocalKey, TruvideoSdkException("File not found"))
+            return
+        }
+        val fileToUpload = File(context.cacheDir, fileName)
+        val outputStream: OutputStream = FileOutputStream(fileToUpload)
+        val buffer = ByteArray(1024)
+        var bytesRead: Int
 
-        inputStream?.let {
-            val fileToUpload = File(
-                context.cacheDir, fileName
-            )
-
-            val outputStream: OutputStream = FileOutputStream(fileToUpload)
-
-            val buffer = ByteArray(1024)
-            var bytesRead: Int
-
-            while (inputStream.read(buffer).also { bytesRead = it } != -1) {
-                outputStream.write(buffer, 0, bytesRead)
-            }
-
-            outputStream.close()
-            inputStream.close()
-
-            val transferObserver: TransferObserver = transferUtility.upload(
-                bucketName, awsPath, fileToUpload
-            )
-
-            transferObserver.setTransferListener(object : TransferListener {
-                var size = 0L
-
-                override fun onStateChanged(id: Int, state: TransferState) {
-                    if (state == TransferState.COMPLETED) {
-                        scope.launch {
-                            val url = client.getUrl(bucketName, awsPath).toString()
-
-                            val type = getMimeType(
-                                fileUri, contentResolver
-                            ).split("/")[0].toUpperCasePreservingASCIIRules()
-
-                            createMedia(listener, mediaLocalKey, fileName, url, size, type)
-                        }
-                    }
-                }
-
-                override fun onProgressChanged(
-                    id: Int, bytesCurrent: Long, bytesTotal: Long
-                ) {
-                    size = bytesTotal
-                    val progress = bytesCurrent * 100 / bytesTotal
-                    listener.onProgressChanged(mediaLocalKey, progress.toInt())
-                }
-
-                override fun onError(id: Int, ex: Exception) {
-                    listener.onError(mediaLocalKey, ex)
-                }
-            })
-            mediaLocalId = transferObserver.id
-        } ?: run {
-            listener.onError(mediaLocalKey, TruvideoSdkException("File Not Found"))
+        while (inputStream.read(buffer).also { bytesRead = it } != -1) {
+            outputStream.write(buffer, 0, bytesRead)
         }
 
-        storeMediaLocalValues(context, mediaLocalKey, mediaLocalId)
+        outputStream.close()
+        inputStream.close()
+
+
+        val transferObserver = transferUtility.upload(bucketName, awsPath, fileToUpload)
+        transferObserver.setTransferListener(object : TransferListener {
+            var size = 0L
+
+            override fun onStateChanged(id: Int, state: TransferState) {
+                if (state == TransferState.COMPLETED) {
+                    //TODO: delete the created temp file
+
+                    scope.launch {
+                        val url = client.getUrl(bucketName, awsPath).toString()
+
+                        //TODO: move this to a util class. Example: FileUriUtil.getMimeType(fileUri)
+                        val type = getMimeType(
+                            fileUri,
+                            contentResolver
+                        ).split("/")[0].toUpperCasePreservingASCIIRules()
+                        createMedia(listener, mediaLocalKey, fileName, url, size, type)
+                    }
+                }
+            }
+
+            override fun onProgressChanged(
+                id: Int, bytesCurrent: Long, bytesTotal: Long
+            ) {
+                size = bytesTotal
+                val progress = bytesCurrent * 100 / bytesTotal
+                listener.onProgressChanged(mediaLocalKey, progress.toInt())
+            }
+
+            override fun onError(id: Int, ex: Exception) {
+                //TODO: delete the created temp file
+                listener.onError(mediaLocalKey, ex)
+            }
+        })
+
+        // Store the local media id
+        val mediaLocalId = transferObserver.id
+        common.localStorage.storeInt("media-id-$mediaLocalKey", mediaLocalId)
     }
 
     private suspend fun createMedia(
@@ -200,24 +205,22 @@ object TruvideoSdkMedia {
         size: Long,
         type: String?
     ) {
-        TruvideoSdk.instance.configuration.log.enabled = true
-        TruvideoSdk.instance.configuration.log.printEnabled = true
+        TruvideoSdk.instance.auth.refreshAuthentication()
 
-        var token = TruvideoSdk.instance.auth.authentication?.accessToken
-        if (token.isNullOrEmpty()) {
-            TruvideoSdk.instance.auth.refreshAuthentication()
-        }
-        token = TruvideoSdk.instance.auth.authentication?.accessToken
+        val token = common.auth.authentication?.accessToken
         if (token.isNullOrEmpty()) {
             listener.onError(
-                mediaLocalKey, TruvideoSdkAuthenticationRequiredException()
+                mediaLocalKey,
+                TruvideoSdkAuthenticationRequiredException()
             )
             return
         }
+
         val headers = mapOf(
             "Authorization" to "Bearer $token",
             "Content-Type" to "application/json",
         )
+
         val body = JSONObject()
         body.apply {
             put("title", title)
@@ -251,44 +254,41 @@ object TruvideoSdkMedia {
                 "to be defined 3 | code: ${response?.code} | body: ${response?.body}"
             )
             listener.onError(
-                mediaLocalKey, TruvideoSdkException("Error creating media")
+                mediaLocalKey,
+                TruvideoSdkException("Error creating media")
             )
         }
     }
 
-    private fun storeMediaLocalValues(context: Context, key: String, value: Int) {
-        val sharedPreferences =
-            context.getSharedPreferences("MediaLocalValues", Context.MODE_PRIVATE)
-        val editor = sharedPreferences.edit()
-        editor.putInt(key, value)
-        editor.apply()
-    }
-
     private fun getClient(
-        context: Context, region: String, poolID: String, accelerate: Boolean
+        region: String,
+        poolID: String,
+        accelerate: Boolean
     ): AmazonS3Client {
         val parsedRegion = Regions.fromName(region)
         val clientConfiguration = ClientConfiguration()
-        clientConfiguration.maxErrorRetry = 1
+        clientConfiguration.maxErrorRetry = 0
         clientConfiguration.socketTimeout = 10 * 60 * 1000
-        val credentialsProvider = CognitoCachingCredentialsProvider(
-            context, poolID, parsedRegion
-        )
+        val credentialsProvider = CognitoCredentialsProvider(poolID, parsedRegion)
         val client = AmazonS3Client(
-            credentialsProvider, Region.getRegion(parsedRegion), clientConfiguration
+            credentialsProvider,
+            Region.getRegion(parsedRegion),
+            clientConfiguration
         )
-        client.setS3ClientOptions(
-            S3ClientOptions.builder().setAccelerateModeEnabled(accelerate).build()
-        )
+        client.setS3ClientOptions(S3ClientOptions.builder().setAccelerateModeEnabled(accelerate).build())
         return client
     }
 
     private fun getTransferUtility(
-        context: Context, client: AmazonS3Client
+        context: Context,
+        client: AmazonS3Client
     ): TransferUtility {
         TransferNetworkLossHandler.getInstance(context)
         val awsConfiguration = AWSMobileClient.getInstance().configuration
-        return TransferUtility.builder().context(context).s3Client(client)
-            .awsConfiguration(awsConfiguration).build()
+        return TransferUtility.builder()
+            .context(context)
+            .s3Client(client)
+            .awsConfiguration(awsConfiguration)
+            .build()
     }
 }
