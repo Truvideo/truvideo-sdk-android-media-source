@@ -68,8 +68,10 @@ object FileUriUtil {
             inputStream.close()
 
             return file
-        } catch (e: Exception) {
-            e.printStackTrace()
+        } catch (ex: Exception) {
+            //TODO: remove this to avoid expose internal errors to the final user
+            ex.printStackTrace()
+
             throw TruvideoSdkException("File not found")
         }
     }
