@@ -1,5 +1,5 @@
-*.iml
-.gradle
+# Android
+/.gradle
 /local.properties
 /.idea/caches
 /.idea/libraries
@@ -7,9 +7,41 @@
 /.idea/workspace.xml
 /.idea/navEditor.xml
 /.idea/assetWizardSettings.xml
-.DS_Store
-/build
+/.idea/dictionaries
 /captures
-.externalNativeBuild
-.cxx
-local.properties
+
+# Android Studio
+/.idea/*.iml
+/.idea/misc.xml
+/.idea/modules
+/.idea/vcs.xml
+/.idea/codeStyles
+/.idea/jarRepositories.xml
+/.idea/gradle.xml
+/.idea/localHistory
+/.idea/assetWizardSettings.xml
+
+# Gradle
+/.gradle
+/build/
+
+# Android Studio 4.1+
+/captures/
+
+# Proguard
+/proguard-*/proguard-android.txt
+/proguard-*/proguard-rules.pro
+/proguard-*/proguard.cfg
+
+# Logs
+*.log
+*.log.*
+
+# Android Studio Navigation editor temp files
+.navigation/
+
+# Android Studio Virtual Device
+.avd/
+
+# Android Studio captures folder
+captures/

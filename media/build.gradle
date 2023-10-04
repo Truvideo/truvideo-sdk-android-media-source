@@ -4,15 +4,19 @@ plugins {
     id 'maven-publish'
 }
 
+def propertiesFile = rootProject.file("media/src/main/assets/version.properties")
+def properties = new Properties()
+properties.load(new FileInputStream(propertiesFile))
+
 android {
     namespace 'com.truvideo.sdk.media'
-    compileSdk 33
+    compileSdk 34
 
     defaultConfig {
         minSdk 24
-        targetSdk 33
-        versionCode 60
-        versionName "0.1.60"
+        targetSdk 34
+        versionCode properties.getProperty("versionCode").toInteger()
+        versionName properties.getProperty("versionName")
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -35,14 +39,14 @@ android {
 }
 
 dependencies {
-    implementation 'androidx.core:core-ktx:1.10.1'
+    implementation 'androidx.core:core-ktx:1.12.0'
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'com.google.android.material:material:1.9.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     implementation 'androidx.fragment:fragment-ktx:1.6.1'
     implementation 'androidx.lifecycle:lifecycle-extensions:2.2.0'
-    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.6.1'
-    implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.6.1'
+    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.6.2'
+    implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.6.2'
 
     implementation 'com.amazonaws:aws-android-sdk-mobile-client:2.16.6'
     implementation 'com.amazonaws:aws-android-sdk-s3:2.44.0'
@@ -59,7 +63,8 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
 
     //Common
-    implementation 'com.github.Truvideo:truvideo-sdk-android-common:0.0.18'
+    var commonVersion = properties.getProperty("commonVersion")
+    implementation("com.github.Truvideo:truvideo-sdk-android-common:$commonVersion")
 
     var ktorVersion = "2.3.2"
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.2")
