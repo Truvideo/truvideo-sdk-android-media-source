@@ -16,6 +16,7 @@ import com.amazonaws.regions.Region
 import com.amazonaws.regions.Regions
 import com.amazonaws.services.s3.AmazonS3Client
 import com.amazonaws.services.s3.S3ClientOptions
+import com.amazonaws.services.s3.model.CannedAccessControlList
 import com.truvideo.sdk.media.service.media.TruvideoSdkMediaService
 import com.truvideo.sdk.media.service.media.TruvideoSdkMediaServiceInterface
 import com.truvideo.sdk.media.util.FileUriUtil
@@ -126,7 +127,8 @@ object TruvideoSdkMedia {
             return
         }
 
-        val transferObserver = transferUtility.upload(bucketName, awsPath, fileToUpload)
+        val acl = CannedAccessControlList.PublicRead
+        val transferObserver = transferUtility.upload(bucketName, awsPath, fileToUpload, acl)
         transferObserver.setTransferListener(object : TransferListener {
             var size = 0L
 
