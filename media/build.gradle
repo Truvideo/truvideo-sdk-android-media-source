@@ -11,8 +11,8 @@ android {
     defaultConfig {
         minSdk 24
         targetSdk 33
-        versionCode 67
-        versionName "0.1.67"
+        versionCode 72
+        versionName "0.1.72"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -59,7 +59,7 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
 
     //Common
-    implementation 'com.github.Truvideo:truvideo-sdk-android-common:0.0.18'
+    implementation 'com.github.Truvideo:truvideo-sdk-android-common:0.0.29'
 
     var ktorVersion = "2.3.2"
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.2")

@@ -7,7 +7,6 @@ import android.content.Context
 import android.net.Uri
 import android.provider.MediaStore
 import android.util.Log
-import android.webkit.MimeTypeMap
 import com.amazonaws.ClientConfiguration
 import com.amazonaws.auth.CognitoCachingCredentialsProvider
 import com.amazonaws.mobile.client.AWSMobileClient
@@ -50,7 +49,7 @@ object TruvideoSdkMedia {
 
         val mediaLocalKey = UUID.randomUUID().toString()
 
-        TruvideoSdk.instance.auth.settings?.mediaStorageCredentials?.let {
+        TruvideoSdk.instance.auth.settings?.credentials?.let {
             uploadVideo(context, it, listener, mediaLocalKey, fileUri)
         } ?: run {
             listener.onError(mediaLocalKey, TruvideoSdkException("Credentials not found"))
@@ -65,18 +64,11 @@ object TruvideoSdkMedia {
 
     private fun isPhotoOrVideo(uri: Uri, contentResolver: ContentResolver): Boolean {
         // Get the MIME type of the file from the URI
-        val mimeType = contentResolver.getType(uri)
-            ?: // If we cannot determine the MIME type, consider it neither a photo nor a video
-            return false
-
-        // Check if the MIME type is null
-
-        // Use MimeTypeMap to get the file extension from the MIME type
-        val extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType)
+        val mimeType = getMimeType(uri, contentResolver)
 
         // Check if the file extension is one of the common image or video extensions
-        val isImage = extension?.startsWith("image/") == true
-        val isVideo = extension?.startsWith("video/") == true
+        val isImage = mimeType.startsWith("image/")
+        val isVideo = mimeType.startsWith("video/")
 
         // Return true if it's an image or video, false otherwise
         return isImage || isVideo
@@ -100,12 +92,16 @@ object TruvideoSdkMedia {
         var mediaLocalId = -1
 
         val bucketName: String = credentials.bucketName
-        val poolID: String = credentials.poolId
+        val poolID: String = credentials.identityID
         val region: String = credentials.region
-        val accelerate: Boolean = credentials.accelerate
+        //TODO
+        // val accelerate: Boolean = credentials.accelerate
+        val accelerate: Boolean = false
+        val folder: String = credentials.bucketFolderMedia
 
+        Log.d("uploadVideo", "uploadVideo: credentials: $credentials")
         val projection = arrayOf(MediaStore.MediaColumns.DISPLAY_NAME)
-        
+
         val cursor = contentResolver.query(fileUri, projection, null, null, null)
 
         var fileExtension = "mp4"
@@ -130,8 +126,8 @@ object TruvideoSdkMedia {
         val client = getClient(context, region, poolID, accelerate)
         val transferUtility: TransferUtility = getTransferUtility(context, client)
 
-        val awsPath = if (credentials.folder.trim().isNotEmpty()) {
-            "${credentials.folder.trim()}/$fileName"
+        val awsPath = if (folder.isNotEmpty()) {
+            "${folder}/$fileName"
         } else {
             fileName
         }
@@ -190,7 +186,7 @@ object TruvideoSdkMedia {
             })
             mediaLocalId = transferObserver.id
         } ?: run {
-            //todo emit error fileNotFound
+            listener.onError(mediaLocalKey, TruvideoSdkException("File Not Found"))
         }
 
         storeMediaLocalValues(context, mediaLocalKey, mediaLocalId)
@@ -223,11 +219,13 @@ object TruvideoSdkMedia {
             "Content-Type" to "application/json",
         )
         val body = JSONObject()
-        body.put("title", title)
-        body.put("type", type)
-        body.put("url", url)
-        body.put("resolution", "LOW")
-        body.put("size", size)
+        body.apply {
+            put("title", title)
+            put("type", type)
+            put("url", url)
+            put("resolution", "LOW")
+            put("size", size)
+        }
 
         Log.d("TruvideoSdkMedia", "createMedia - headers: $headers")
         Log.d("TruvideoSdkMedia", "createMedia - body: $body")
@@ -243,6 +241,7 @@ object TruvideoSdkMedia {
 
         if (response?.isSuccess == true) {
             response.body.let {
+                Log.d("body", "createMedia: $it")
                 // TODO get url and return it
                 listener.onComplete(mediaLocalKey, url)
             }
