@@ -11,10 +11,7 @@ internal class TruvideoSdkMediaService : TruvideoSdkMediaServiceInterface {
     private val common = TruvideoSdk.instance
 
     override suspend fun createMedia(
-        title: String,
-        url: String,
-        size: Long,
-        type: String
+        title: String, url: String, size: Long, type: String
     ): String {
         common.auth.refreshAuthentication()
 
@@ -38,8 +35,6 @@ internal class TruvideoSdkMediaService : TruvideoSdkMediaServiceInterface {
             put("size", size)
         }
 
-        Log.d("TruvideoSdkMedia", "createMedia - headers: $headers")
-        Log.d("TruvideoSdkMedia", "createMedia - body: $body")
         val response = TruvideoSdk.instance.http.post(
             url = "https://sdk-mobile-api-beta.truvideo.com:443/api/media",
             headers = headers,
@@ -48,15 +43,10 @@ internal class TruvideoSdkMediaService : TruvideoSdkMediaServiceInterface {
             printLogs = true
         )
 
-        Log.d("TruvideoSdkMedia", "createMedia - response: $response")
-
         if (response == null || !response.isSuccess) {
             throw TruvideoSdkException("Error creating media")
         }
 
-        Log.d("body", "createMedia: ${response.body}")
-
-        // TODO: get url from response and return it
-        return url
+        return JSONObject(response.body).getString("url")
     }
 }
