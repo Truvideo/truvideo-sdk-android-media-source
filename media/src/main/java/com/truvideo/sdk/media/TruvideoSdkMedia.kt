@@ -4,7 +4,6 @@ package com.truvideo.sdk.media
 
 import android.content.Context
 import android.net.Uri
-import android.util.Log
 import com.amazonaws.ClientConfiguration
 import com.amazonaws.auth.CognitoCredentialsProvider
 import com.amazonaws.mobile.client.AWSMobileClient
@@ -26,12 +25,19 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import truvideo.sdk.common.TruvideoSdk
 import truvideo.sdk.common.exception.TruvideoSdkAuthenticationRequiredException
+import truvideo.sdk.common.exception.TruvideoSdkConnectivityRequiredException
 import truvideo.sdk.common.exception.TruvideoSdkException
 import truvideo.sdk.common.model.TruvideoSdkStorageCredentials
+import truvideo.sdk.common.service.connectivity.TruvideoSdkConnectivityService
 import java.io.File
 import java.util.UUID
 
-
+/**
+ * Singleton object for managing media uploads and cancellations.
+ *
+ * This object provides methods for uploading video files to a remote server and canceling ongoing transfers.
+ * It uses the Truvideo SDK services and common configurations for these operations.
+ */
 object TruvideoSdkMedia {
 
     private val mediaService: TruvideoSdkMediaServiceInterface = TruvideoSdkMediaService()
@@ -40,10 +46,18 @@ object TruvideoSdkMedia {
 
     private var scope = CoroutineScope(Dispatchers.IO)
 
+    /**
+     * Uploads a video file to a server.
+     *
+     * This method uploads a video file specified by the [fileUri] to a remote server.
+     *
+     * @param context The Android application context.
+     * @param listener A [TruvideoSdkTransferListener] to receive upload progress and completion events.
+     * @param fileUri The URI of the video file to be uploaded.
+     * @return A unique key associated with the upload operation.
+     */
     fun upload(
-        context: Context,
-        listener: TruvideoSdkTransferListener,
-        fileUri: Uri
+        context: Context, listener: TruvideoSdkTransferListener, fileUri: Uri
     ): String {
         val mediaLocalKey = UUID.randomUUID().toString()
 
@@ -59,13 +73,47 @@ object TruvideoSdkMedia {
             return mediaLocalKey
         }
 
-
-        Log.d("uploadVideo", "uploadVideo: credentials: $credentials")
-
         // TODO: check common settings to check if i can upload a file
 
         uploadVideo(context, credentials, listener, mediaLocalKey, fileUri)
         return mediaLocalKey
+    }
+
+    /**
+     * Cancels an ongoing transfer associated with the provided [key].
+     *
+     * This method cancels an ongoing transfer operation associated with the specified [key].
+     *
+     * @param context The Android application context.
+     * @param listener A [TruvideoSdkTransferListener] to receive cancellation status and errors.
+     * @param key The unique key associated with the transfer to be canceled.
+     */
+    fun cancel(context: Context, listener: TruvideoSdkTransferListener, key: String) {
+        val isAuthenticated = common.auth.isAuthenticated
+        if (!isAuthenticated) {
+            listener.onError(key, TruvideoSdkAuthenticationRequiredException())
+            return
+        }
+
+        val credentials = common.auth.settings?.credentials
+        if (credentials == null) {
+            listener.onError(key, TruvideoSdkException("Credentials not found"))
+            return
+        }
+
+        val poolID: String = credentials.identityPoolID
+        val region: String = credentials.region
+        val client = getClient(region, poolID)
+
+        val id = common.localStorage.readInt("media-id-$key", -1)
+
+        if (id < 0) {
+            listener.onError(key, TruvideoSdkException("Invalid key"))
+            return
+        }
+
+        val transferUtility = getTransferUtility(context, client)
+        transferUtility.cancel(id)
     }
 
     private fun uploadVideo(
@@ -128,57 +176,72 @@ object TruvideoSdkMedia {
         }
 
         val acl = CannedAccessControlList.PublicRead
-        val transferObserver = transferUtility.upload(bucketName, awsPath, fileToUpload, acl)
-        transferObserver.setTransferListener(object : TransferListener {
-            var size = 0L
 
-            override fun onStateChanged(id: Int, state: TransferState) {
-                if (state == TransferState.COMPLETED) {
-                    tryDeleteFile(fileToUpload)
+        scope.launch {
+            if (TruvideoSdkConnectivityService.instance.isOnline()) {
+                val transferObserver =
+                    transferUtility.upload(bucketName, awsPath, fileToUpload, acl)
+                transferObserver.setTransferListener(object : TransferListener {
+                    var size = 0L
 
-                    scope.launch {
-                        val url = client.getUrl(bucketName, awsPath).toString()
-                        val mimeType = FileUriUtil.getMimeType(context, fileUri)
-                        val type = mimeType.split("/")[0].toUpperCasePreservingASCIIRules()
+                    override fun onStateChanged(id: Int, state: TransferState) {
+                        if (state == TransferState.COMPLETED) {
+                            tryDeleteFile(fileToUpload)
 
-                        try {
-                            val result = mediaService.createMedia(title = fileName, url = url, size = size, type = type)
-                            listener.onComplete(mediaLocalKey, result)
-                        } catch (ex: Exception) {
-                            //TODO: remove this to avoid expose internal errors to the final user
-                            ex.printStackTrace()
+                            scope.launch {
+                                val url = client.getUrl(bucketName, awsPath).toString()
+                                val mimeType = FileUriUtil.getMimeType(context, fileUri)
+                                val type = mimeType.split("/")[0].toUpperCasePreservingASCIIRules()
 
-                            if (ex is TruvideoSdkException) {
-                                listener.onError(mediaLocalKey, ex)
-                            } else {
-                                listener.onError(mediaLocalKey, TruvideoSdkException("Error creating file media"))
+                                try {
+                                    val result = mediaService.createMedia(
+                                        title = fileName, url = url, size = size, type = type
+                                    )
+                                    listener.onComplete(mediaLocalKey, result)
+                                } catch (ex: Exception) {
+                                    //TODO: remove this to avoid expose internal errors to the final user
+                                    ex.printStackTrace()
+
+                                    if (ex is TruvideoSdkException) {
+                                        listener.onError(mediaLocalKey, ex)
+                                    } else {
+                                        listener.onError(
+                                            mediaLocalKey,
+                                            TruvideoSdkException("Error creating file media")
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
-                }
+
+                    override fun onProgressChanged(
+                        id: Int, bytesCurrent: Long, bytesTotal: Long
+                    ) {
+                        size = bytesTotal
+                        val progress = bytesCurrent * 100 / bytesTotal
+                        listener.onProgressChanged(mediaLocalKey, progress.toInt())
+                    }
+
+                    override fun onError(id: Int, ex: Exception) {
+                        tryDeleteFile(fileToUpload)
+
+                        //TODO: remove this to avoid expose internal errors to the final user
+                        ex.printStackTrace()
+
+                        listener.onError(
+                            mediaLocalKey, TruvideoSdkException("Error uploading the file")
+                        )
+                    }
+                })
+
+                // Store the local media id
+                val mediaLocalId = transferObserver.id
+                common.localStorage.storeInt("media-id-$mediaLocalKey", mediaLocalId)
+            } else {
+                listener.onError(mediaLocalKey, TruvideoSdkConnectivityRequiredException())
             }
-
-            override fun onProgressChanged(
-                id: Int, bytesCurrent: Long, bytesTotal: Long
-            ) {
-                size = bytesTotal
-                val progress = bytesCurrent * 100 / bytesTotal
-                listener.onProgressChanged(mediaLocalKey, progress.toInt())
-            }
-
-            override fun onError(id: Int, ex: Exception) {
-                tryDeleteFile(fileToUpload)
-
-                //TODO: remove this to avoid expose internal errors to the final user
-                ex.printStackTrace()
-
-                listener.onError(mediaLocalKey, TruvideoSdkException("Error uploading the file"))
-            }
-        })
-
-        // Store the local media id
-        val mediaLocalId = transferObserver.id
-        common.localStorage.storeInt("media-id-$mediaLocalKey", mediaLocalId)
+        }
     }
 
     private fun tryDeleteFile(file: File) {
@@ -200,27 +263,23 @@ object TruvideoSdkMedia {
         clientConfiguration.socketTimeout = 10 * 60 * 1000
         val credentialsProvider = CognitoCredentialsProvider(poolID, parsedRegion)
         val client = AmazonS3Client(
-            credentialsProvider,
-            Region.getRegion(parsedRegion),
-            clientConfiguration
+            credentialsProvider, Region.getRegion(parsedRegion), clientConfiguration
         )
 
         //TODO: check accelerate
         val accelerate = false
-        client.setS3ClientOptions(S3ClientOptions.builder().setAccelerateModeEnabled(accelerate).build())
+        client.setS3ClientOptions(
+            S3ClientOptions.builder().setAccelerateModeEnabled(accelerate).build()
+        )
         return client
     }
 
     private fun getTransferUtility(
-        context: Context,
-        client: AmazonS3Client
+        context: Context, client: AmazonS3Client
     ): TransferUtility {
         TransferNetworkLossHandler.getInstance(context)
         val awsConfiguration = AWSMobileClient.getInstance().configuration
-        return TransferUtility.builder()
-            .context(context)
-            .s3Client(client)
-            .awsConfiguration(awsConfiguration)
-            .build()
+        return TransferUtility.builder().context(context).s3Client(client)
+            .awsConfiguration(awsConfiguration).build()
     }
 }
