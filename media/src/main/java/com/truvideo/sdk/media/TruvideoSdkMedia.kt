@@ -28,7 +28,6 @@ import truvideo.sdk.common.exception.TruvideoSdkAuthenticationRequiredException
 import truvideo.sdk.common.exception.TruvideoSdkConnectivityRequiredException
 import truvideo.sdk.common.exception.TruvideoSdkException
 import truvideo.sdk.common.model.TruvideoSdkStorageCredentials
-import truvideo.sdk.common.service.connectivity.TruvideoSdkConnectivityService
 import java.io.File
 import java.util.UUID
 
@@ -178,9 +177,14 @@ object TruvideoSdkMedia {
         val acl = CannedAccessControlList.PublicRead
 
         scope.launch {
-            if (TruvideoSdkConnectivityService.instance.isOnline()) {
-                val transferObserver =
-                    transferUtility.upload(bucketName, awsPath, fileToUpload, acl)
+            val isOnline = common.connectivity.isOnline()
+            if (isOnline) {
+                val transferObserver = transferUtility.upload(
+                    bucketName,
+                    awsPath,
+                    fileToUpload,
+                    acl
+                )
                 transferObserver.setTransferListener(object : TransferListener {
                     var size = 0L
 
