@@ -31,13 +31,7 @@ import truvideo.sdk.common.model.TruvideoSdkStorageCredentials
 import java.io.File
 import java.util.UUID
 
-/**
- * Singleton object for managing media uploads and cancellations.
- *
- * This object provides methods for uploading video files to a remote server and canceling ongoing transfers.
- * It uses the Truvideo SDK services and common configurations for these operations.
- */
-object TruvideoSdkMedia {
+object TruvideoSdkMedia: TruvideoSdkMediaInterface {
 
     private val mediaService: TruvideoSdkMediaServiceInterface = TruvideoSdkMediaService()
 
@@ -45,18 +39,7 @@ object TruvideoSdkMedia {
 
     private var scope = CoroutineScope(Dispatchers.IO)
 
-    /**
-     * Initiates the upload of a file to a remote server.
-     *
-     * This method begins the process of uploading a file to a remote server. It generates
-     * a unique key for the upload operation and checks the authentication status before proceeding.
-     *
-     * @param context The Android application context.
-     * @param listener The listener to handle transfer progress and errors.
-     * @param fileUri The URI of the file to be uploaded.
-     * @return A unique key associated with the upload process, which can be used for tracking and error handling.
-     */
-    fun upload(
+    override fun upload(
         context: Context,
         listener: TruvideoSdkTransferListener,
         fileUri: Uri
@@ -81,24 +64,13 @@ object TruvideoSdkMedia {
         return mediaLocalKey
     }
 
-    /**
-     * Cancels an ongoing transfer associated with the provided [key].
-     *
-     * This method cancels an ongoing transfer operation associated with the specified [key].
-     *
-     * @param context The Android application context.
-     * @param key The unique key associated with the transfer to be canceled.
-     */
-    fun cancel(context: Context, key: String) {
+    override fun cancel(context: Context, key: String) {
         val isAuthenticated = common.auth.isAuthenticated
         if (!isAuthenticated) {
             throw TruvideoSdkAuthenticationRequiredException()
         }
 
-        val credentials = common.auth.settings?.credentials
-        if (credentials == null) {
-            throw TruvideoSdkException("Credentials not found")
-        }
+        val credentials = common.auth.settings?.credentials ?: throw TruvideoSdkException("Credentials not found")
 
         val poolID: String = credentials.identityPoolID
         val region: String = credentials.region
