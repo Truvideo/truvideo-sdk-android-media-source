@@ -9,7 +9,7 @@ import java.io.FileOutputStream
 import java.io.InputStream
 import java.io.OutputStream
 
-object FileUriUtil {
+internal object FileUriUtil {
 
     fun getMimeType(context: Context, uri: Uri): String {
         val contentResolver = context.contentResolver

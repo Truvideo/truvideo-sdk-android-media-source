@@ -16,6 +16,8 @@ import com.amazonaws.regions.Regions
 import com.amazonaws.services.s3.AmazonS3Client
 import com.amazonaws.services.s3.S3ClientOptions
 import com.amazonaws.services.s3.model.CannedAccessControlList
+import com.truvideo.sdk.media.interfaces.TruvideoSdkMediaInterface
+import com.truvideo.sdk.media.interfaces.TruvideoSdkTransferListener
 import com.truvideo.sdk.media.service.media.TruvideoSdkMediaService
 import com.truvideo.sdk.media.service.media.TruvideoSdkMediaServiceInterface
 import com.truvideo.sdk.media.util.FileUriUtil
@@ -31,7 +33,9 @@ import truvideo.sdk.common.model.TruvideoSdkStorageCredentials
 import java.io.File
 import java.util.UUID
 
-object TruvideoSdkMedia: TruvideoSdkMediaInterface {
+val TruvideoSdkMedia: TruvideoSdkMediaInterface = TruvideoSdkMediaImpl
+
+internal object TruvideoSdkMediaImpl : TruvideoSdkMediaInterface {
 
     private val mediaService: TruvideoSdkMediaServiceInterface = TruvideoSdkMediaService()
 

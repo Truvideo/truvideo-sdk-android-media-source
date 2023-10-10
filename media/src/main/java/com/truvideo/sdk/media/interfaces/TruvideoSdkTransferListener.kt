@@ -1,4 +1,4 @@
-package com.truvideo.sdk.media
+package com.truvideo.sdk.media.interfaces
 
 
 /**
