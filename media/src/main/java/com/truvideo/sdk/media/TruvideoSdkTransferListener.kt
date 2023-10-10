@@ -1,33 +1,32 @@
 package com.truvideo.sdk.media
 
+
 /**
- * Listener interface for tracking transfer events during media uploads or cancellations.
- *
- * Implement this interface to receive notifications when media transfer operations complete, progress changes,
- * or errors occur.
+ * Interface for receiving transfer-related events during file upload.
  */
 interface TruvideoSdkTransferListener {
-    /**
-     * Called when the transfer finishes correctly.
-     *
-     * @param id The id of the transfer record.
-     * @param url The media url.
-     */
-    fun onComplete(id: String, url: String)
 
     /**
-     * Called when more bytes are transferred.
+     * Called when a file transfer operation is completed successfully.
      *
-     * @param id The id of the transfer record.
-     * @param progress the percentage transferred currently.
+     * @param key The unique key associated with the completed transfer operation.
+     * @param url The URL or location where the file has been successfully transferred.
      */
-    fun onProgressChanged(id: String, progress: Int)
+    fun onComplete(key: String, url: String)
 
     /**
-     * Called when an exception happens.
+     * Called when the progress of a file transfer operation changes.
      *
-     * @param id The id of the transfer record.
-     * @param ex An exception object.
+     * @param key The unique key associated with the ongoing transfer operation.
+     * @param progress The current progress of the transfer operation as a percentage.
      */
-    fun onError(id: String, ex: Exception)
+    fun onProgressChanged(key: String, progress: Int)
+
+    /**
+     * Called when an error occurs during a file transfer operation.
+     *
+     * @param key The unique key associated with the transfer operation that encountered an error.
+     * @param ex The exception that describes the error encountered during the transfer.
+     */
+    fun onError(key: String, ex: Exception)
 }
