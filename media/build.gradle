@@ -26,13 +26,16 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+
     buildFeatures {
         viewBinding true
     }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+
     kotlinOptions {
         jvmTarget = '1.8'
     }
@@ -82,12 +85,12 @@ project.afterEvaluate {
         publications {
             library(MavenPublication) {
                 setGroupId 'com.truvideo.sdk'
-                //You can either define these here or get them from project conf elsewhere
                 setArtifactId 'media'
                 version android.defaultConfig.versionName
-                artifact bundleReleaseAar //aar artifact you want to publish
+                artifact bundleReleaseAar
 
                 pom.withXml {
+                    //noinspection GroovyImplicitNullArgumentCall
                     def dependenciesNode = asNode().appendNode('dependencies')
                     configurations.implementation.allDependencies.each {
                         def dependencyNode = dependenciesNode.appendNode('dependency')

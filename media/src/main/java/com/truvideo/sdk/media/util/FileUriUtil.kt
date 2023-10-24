@@ -9,7 +9,7 @@ import java.io.FileOutputStream
 import java.io.InputStream
 import java.io.OutputStream
 
-object FileUriUtil {
+internal object FileUriUtil {
 
     fun getMimeType(context: Context, uri: Uri): String {
         val contentResolver = context.contentResolver
@@ -68,8 +68,10 @@ object FileUriUtil {
             inputStream.close()
 
             return file
-        } catch (e: Exception) {
-            e.printStackTrace()
+        } catch (ex: Exception) {
+            //TODO: remove this to avoid expose internal errors to the final user
+            ex.printStackTrace()
+
             throw TruvideoSdkException("File not found")
         }
     }

@@ -16,6 +16,8 @@ import com.amazonaws.regions.Regions
 import com.amazonaws.services.s3.AmazonS3Client
 import com.amazonaws.services.s3.S3ClientOptions
 import com.amazonaws.services.s3.model.CannedAccessControlList
+import com.truvideo.sdk.media.interfaces.TruvideoSdkMediaInterface
+import com.truvideo.sdk.media.interfaces.TruvideoSdkTransferListener
 import com.truvideo.sdk.media.service.media.TruvideoSdkMediaService
 import com.truvideo.sdk.media.service.media.TruvideoSdkMediaServiceInterface
 import com.truvideo.sdk.media.util.FileUriUtil
@@ -28,17 +30,12 @@ import truvideo.sdk.common.exception.TruvideoSdkAuthenticationRequiredException
 import truvideo.sdk.common.exception.TruvideoSdkConnectivityRequiredException
 import truvideo.sdk.common.exception.TruvideoSdkException
 import truvideo.sdk.common.model.TruvideoSdkStorageCredentials
-import truvideo.sdk.common.service.connectivity.TruvideoSdkConnectivityService
 import java.io.File
 import java.util.UUID
 
-/**
- * Singleton object for managing media uploads and cancellations.
- *
- * This object provides methods for uploading video files to a remote server and canceling ongoing transfers.
- * It uses the Truvideo SDK services and common configurations for these operations.
- */
-object TruvideoSdkMedia {
+val TruvideoSdkMedia: TruvideoSdkMediaInterface = TruvideoSdkMediaImpl
+
+internal object TruvideoSdkMediaImpl : TruvideoSdkMediaInterface {
 
     private val mediaService: TruvideoSdkMediaServiceInterface = TruvideoSdkMediaService()
 
@@ -46,18 +43,10 @@ object TruvideoSdkMedia {
 
     private var scope = CoroutineScope(Dispatchers.IO)
 
-    /**
-     * Uploads a video file to a server.
-     *
-     * This method uploads a video file specified by the [fileUri] to a remote server.
-     *
-     * @param context The Android application context.
-     * @param listener A [TruvideoSdkTransferListener] to receive upload progress and completion events.
-     * @param fileUri The URI of the video file to be uploaded.
-     * @return A unique key associated with the upload operation.
-     */
-    fun upload(
-        context: Context, listener: TruvideoSdkTransferListener, fileUri: Uri
+    override fun upload(
+        context: Context,
+        listener: TruvideoSdkTransferListener,
+        fileUri: Uri
     ): String {
         val mediaLocalKey = UUID.randomUUID().toString()
 
@@ -79,27 +68,13 @@ object TruvideoSdkMedia {
         return mediaLocalKey
     }
 
-    /**
-     * Cancels an ongoing transfer associated with the provided [key].
-     *
-     * This method cancels an ongoing transfer operation associated with the specified [key].
-     *
-     * @param context The Android application context.
-     * @param listener A [TruvideoSdkTransferListener] to receive cancellation status and errors.
-     * @param key The unique key associated with the transfer to be canceled.
-     */
-    fun cancel(context: Context, listener: TruvideoSdkTransferListener, key: String) {
+    override fun cancel(context: Context, key: String) {
         val isAuthenticated = common.auth.isAuthenticated
         if (!isAuthenticated) {
-            listener.onError(key, TruvideoSdkAuthenticationRequiredException())
-            return
+            throw TruvideoSdkAuthenticationRequiredException()
         }
 
-        val credentials = common.auth.settings?.credentials
-        if (credentials == null) {
-            listener.onError(key, TruvideoSdkException("Credentials not found"))
-            return
-        }
+        val credentials = common.auth.settings?.credentials ?: throw TruvideoSdkException("Credentials not found")
 
         val poolID: String = credentials.identityPoolID
         val region: String = credentials.region
@@ -108,8 +83,7 @@ object TruvideoSdkMedia {
         val id = common.localStorage.readInt("media-id-$key", -1)
 
         if (id < 0) {
-            listener.onError(key, TruvideoSdkException("Invalid key"))
-            return
+            throw TruvideoSdkException("Invalid key")
         }
 
         val transferUtility = getTransferUtility(context, client)
@@ -178,9 +152,14 @@ object TruvideoSdkMedia {
         val acl = CannedAccessControlList.PublicRead
 
         scope.launch {
-            if (TruvideoSdkConnectivityService.instance.isOnline()) {
-                val transferObserver =
-                    transferUtility.upload(bucketName, awsPath, fileToUpload, acl)
+            val isOnline = common.connectivity.isOnline()
+            if (isOnline) {
+                val transferObserver = transferUtility.upload(
+                    bucketName,
+                    awsPath,
+                    fileToUpload,
+                    acl
+                )
                 transferObserver.setTransferListener(object : TransferListener {
                     var size = 0L
 
