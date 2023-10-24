@@ -3,6 +3,7 @@ package com.truvideo.sdk.media.util
 import android.content.Context
 import android.net.Uri
 import android.provider.MediaStore
+import android.webkit.MimeTypeMap
 import truvideo.sdk.common.exception.TruvideoSdkException
 import java.io.File
 import java.io.FileOutputStream
@@ -13,7 +14,15 @@ object FileUriUtil {
 
     fun getMimeType(context: Context, uri: Uri): String {
         val contentResolver = context.contentResolver
-        return contentResolver.getType(uri) ?: "unknown/unknown"
+        var mimeType = contentResolver.getType(uri)
+
+        return if (mimeType != null) {
+            mimeType
+        } else {
+            val fileExtension = MimeTypeMap.getFileExtensionFromUrl(uri.toString())
+            mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileExtension)
+            mimeType ?: "unknown/unknown"
+        }
     }
 
     fun isPhotoOrVideo(context: Context, uri: Uri): Boolean {
@@ -32,6 +41,7 @@ object FileUriUtil {
         val contentResolver = context.contentResolver
         val projection = arrayOf(MediaStore.MediaColumns.DISPLAY_NAME)
         val cursor = contentResolver.query(uri, projection, null, null, null)
+        var extension: String? = null
         if (cursor != null && cursor.moveToFirst()) {
             var columnIndex = cursor.getColumnIndex(MediaStore.MediaColumns.DISPLAY_NAME)
             if (columnIndex < 0) {
@@ -43,8 +53,16 @@ object FileUriUtil {
             displayName?.let {
                 val lastDot = it.lastIndexOf(".")
                 if (lastDot != -1) {
-                    return it.substring(lastDot + 1)
+                    extension = it.substring(lastDot + 1)
                 }
+            }
+        }
+        if (extension != null) {
+            return extension as String
+        } else {
+            val uriSplit = uri.toString().split(".")
+            if (uriSplit.isNotEmpty()) {
+                return uriSplit.last()
             }
         }
 
@@ -54,7 +72,8 @@ object FileUriUtil {
     fun createTempFile(context: Context, uri: Uri, fileName: String): File {
         try {
             val contentResolver = context.contentResolver
-            val inputStream: InputStream = contentResolver.openInputStream(uri) ?: throw TruvideoSdkException("File not found")
+            val inputStream: InputStream =
+                contentResolver.openInputStream(uri) ?: throw TruvideoSdkException("File not found")
             val file = File(context.cacheDir, fileName)
             val outputStream: OutputStream = FileOutputStream(file)
             val buffer = ByteArray(1024)
