@@ -3,7 +3,7 @@ package com.truvideo.sdk.media.interfaces
 import android.content.Context
 import android.net.Uri
 
-interface TruvideoSdkMediaInterface {
+interface TruvideoSdkMedia {
 
     /**
      * Initiates the upload of a file to a remote server.
