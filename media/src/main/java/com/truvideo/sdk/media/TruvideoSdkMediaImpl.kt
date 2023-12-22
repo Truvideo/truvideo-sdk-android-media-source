@@ -15,7 +15,9 @@ import com.amazonaws.services.s3.AmazonS3Client
 import com.amazonaws.services.s3.S3ClientOptions
 import com.amazonaws.services.s3.model.CannedAccessControlList
 import com.truvideo.sdk.media.interfaces.TruvideoSdkMedia
-import com.truvideo.sdk.media.interfaces.TruvideoSdkTransferListener
+
+import com.truvideo.sdk.media.interfaces.TruvideoSdkUploadCallback
+
 import com.truvideo.sdk.media.service.media.TruvideoSdkMediaService
 import com.truvideo.sdk.media.service.media.TruvideoSdkMediaServiceInterface
 import com.truvideo.sdk.media.util.FileUriUtil
@@ -42,26 +44,24 @@ internal object TruvideoSdkMediaImpl : TruvideoSdkMedia {
 
     override fun upload(
         context: Context,
-        listener: TruvideoSdkTransferListener,
-        fileUri: Uri
+        file: Uri,
+        callback: TruvideoSdkUploadCallback
     ): String {
         val mediaLocalKey = UUID.randomUUID().toString()
 
         val isAuthenticated = common.auth.isAuthenticated
         if (!isAuthenticated) {
-            listener.onError(mediaLocalKey, TruvideoSdkAuthenticationRequiredException())
+            callback.onError(mediaLocalKey, TruvideoSdkAuthenticationRequiredException())
             return mediaLocalKey
         }
 
         val credentials = common.auth.settings?.credentials
         if (credentials == null) {
-            listener.onError(mediaLocalKey, TruvideoSdkException("Credentials not found"))
+            callback.onError(mediaLocalKey, TruvideoSdkException("Credentials not found"))
             return mediaLocalKey
         }
 
-        // TODO: check common settings to check if i can upload a file
-
-        uploadVideo(context, credentials, listener, mediaLocalKey, fileUri)
+        uploadVideo(context, credentials, mediaLocalKey, file, callback)
         return mediaLocalKey
     }
 
@@ -90,12 +90,12 @@ internal object TruvideoSdkMediaImpl : TruvideoSdkMedia {
     private fun uploadVideo(
         context: Context,
         credentials: TruvideoSdkStorageCredentials,
-        listener: TruvideoSdkTransferListener,
         mediaLocalKey: String,
-        fileUri: Uri
+        fileUri: Uri,
+        callback: TruvideoSdkUploadCallback,
     ) {
         if (!FileUriUtil.isPhotoOrVideo(context, fileUri)) {
-            listener.onError(mediaLocalKey, TruvideoSdkException("Invalid file type"))
+            callback.onError(mediaLocalKey, TruvideoSdkException("Invalid file type"))
             return
         }
 
@@ -114,9 +114,9 @@ internal object TruvideoSdkMediaImpl : TruvideoSdkMedia {
             ex.printStackTrace()
 
             if (ex is TruvideoSdkException) {
-                listener.onError(mediaLocalKey, ex)
+                callback.onError(mediaLocalKey, ex)
             } else {
-                listener.onError(mediaLocalKey, TruvideoSdkException("Invalid uri"))
+                callback.onError(mediaLocalKey, TruvideoSdkException("Invalid uri"))
             }
             return
         }
@@ -139,9 +139,9 @@ internal object TruvideoSdkMediaImpl : TruvideoSdkMedia {
             ex.printStackTrace()
 
             if (ex is TruvideoSdkException) {
-                listener.onError(mediaLocalKey, ex)
+                callback.onError(mediaLocalKey, ex)
             } else {
-                listener.onError(mediaLocalKey, TruvideoSdkException("File not found"))
+                callback.onError(mediaLocalKey, TruvideoSdkException("File not found"))
             }
             return
         }
@@ -173,15 +173,15 @@ internal object TruvideoSdkMediaImpl : TruvideoSdkMedia {
                                     val result = mediaService.createMedia(
                                         title = fileName, url = url, size = size, type = type
                                     )
-                                    listener.onComplete(mediaLocalKey, result)
+                                    callback.onComplete(mediaLocalKey, result)
                                 } catch (ex: Exception) {
                                     //TODO: remove this to avoid expose internal errors to the final user
                                     ex.printStackTrace()
 
                                     if (ex is TruvideoSdkException) {
-                                        listener.onError(mediaLocalKey, ex)
+                                        callback.onError(mediaLocalKey, ex)
                                     } else {
-                                        listener.onError(
+                                        callback.onError(
                                             mediaLocalKey,
                                             TruvideoSdkException("Error creating file media")
                                         )
@@ -196,7 +196,7 @@ internal object TruvideoSdkMediaImpl : TruvideoSdkMedia {
                     ) {
                         size = bytesTotal
                         val progress = bytesCurrent * 100 / bytesTotal
-                        listener.onProgressChanged(mediaLocalKey, progress.toInt())
+                        callback.onProgressChanged(mediaLocalKey, progress.toInt())
                     }
 
                     override fun onError(id: Int, ex: Exception) {
@@ -205,7 +205,7 @@ internal object TruvideoSdkMediaImpl : TruvideoSdkMedia {
                         //TODO: remove this to avoid expose internal errors to the final user
                         ex.printStackTrace()
 
-                        listener.onError(
+                        callback.onError(
                             mediaLocalKey, TruvideoSdkException("Error uploading the file")
                         )
                     }
@@ -215,7 +215,7 @@ internal object TruvideoSdkMediaImpl : TruvideoSdkMedia {
                 val mediaLocalId = transferObserver.id
                 common.localStorage.storeInt("media-id-$mediaLocalKey", mediaLocalId)
             } else {
-                listener.onError(mediaLocalKey, TruvideoSdkConnectivityRequiredException())
+                callback.onError(mediaLocalKey, TruvideoSdkConnectivityRequiredException())
             }
         }
     }

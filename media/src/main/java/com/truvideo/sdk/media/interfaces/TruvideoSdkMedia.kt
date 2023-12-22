@@ -12,14 +12,14 @@ interface TruvideoSdkMedia {
      * a unique key for the upload operation and checks the authentication status before proceeding.
      *
      * @param context The Android application context.
-     * @param listener The listener to handle transfer progress and errors.
-     * @param fileUri The URI of the file to be uploaded.
+     * @param callback The listener to handle transfer progress and errors.
+     * @param file The URI of the file to be uploaded.
      * @return A unique key associated with the upload process, which can be used for tracking and error handling.
      */
     fun upload(
         context: Context,
-        listener: TruvideoSdkTransferListener,
-        fileUri: Uri
+        file: Uri,
+        callback: TruvideoSdkUploadCallback
     ): String
 
 
