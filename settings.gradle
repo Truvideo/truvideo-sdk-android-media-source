@@ -16,5 +16,5 @@ dependencyResolutionManagement {
         mavenLocal()
     }
 }
-rootProject.name = "TruVideoSDK - Media"
+rootProject.name = "truvideo.sdk.media"
 include ':media'
