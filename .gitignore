@@ -21,6 +21,8 @@
 /.idea/localHistory
 /.idea/assetWizardSettings.xml
 
+.idea/
+
 # Gradle
 /.gradle
 /build/
