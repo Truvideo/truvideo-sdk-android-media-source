@@ -15,7 +15,7 @@ import com.amazonaws.services.s3.AmazonS3Client
 import com.amazonaws.services.s3.S3ClientOptions
 import com.amazonaws.services.s3.model.CannedAccessControlList
 import com.truvideo.sdk.media.interfaces.TruvideoSdkMedia
-import com.truvideo.sdk.media.interfaces.TruvideoSdkTransferListener
+import com.truvideo.sdk.media.interfaces.TruvideoSdkUploadCallback
 import com.truvideo.sdk.media.service.media.TruvideoSdkMediaService
 import com.truvideo.sdk.media.service.media.TruvideoSdkMediaServiceInterface
 import com.truvideo.sdk.media.util.FileUriUtil
@@ -42,26 +42,26 @@ internal object TruvideoSdkMediaImpl : TruvideoSdkMedia {
 
     override fun upload(
         context: Context,
-        listener: TruvideoSdkTransferListener,
-        fileUri: Uri
+        file: Uri,
+        callback: TruvideoSdkUploadCallback
     ): String {
         val mediaLocalKey = UUID.randomUUID().toString()
 
         val isAuthenticated = common.auth.isAuthenticated
         if (!isAuthenticated) {
-            listener.onError(mediaLocalKey, TruvideoSdkAuthenticationRequiredException())
+            callback.onError(mediaLocalKey, TruvideoSdkAuthenticationRequiredException())
             return mediaLocalKey
         }
 
         val credentials = common.auth.settings?.credentials
         if (credentials == null) {
-            listener.onError(mediaLocalKey, TruvideoSdkException("Credentials not found"))
+            callback.onError(mediaLocalKey, TruvideoSdkException("Credentials not found"))
             return mediaLocalKey
         }
 
         // TODO: check common settings to check if i can upload a file
 
-        uploadVideo(context, credentials, listener, mediaLocalKey, fileUri)
+        uploadVideo(context, credentials, callback, mediaLocalKey, file)
         return mediaLocalKey
     }
 
@@ -90,7 +90,7 @@ internal object TruvideoSdkMediaImpl : TruvideoSdkMedia {
     private fun uploadVideo(
         context: Context,
         credentials: TruvideoSdkStorageCredentials,
-        listener: TruvideoSdkTransferListener,
+        listener: TruvideoSdkUploadCallback,
         mediaLocalKey: String,
         fileUri: Uri
     ) {

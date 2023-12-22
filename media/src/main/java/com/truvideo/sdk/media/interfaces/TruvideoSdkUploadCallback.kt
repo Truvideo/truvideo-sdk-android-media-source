@@ -4,7 +4,7 @@ package com.truvideo.sdk.media.interfaces
 /**
  * Interface for receiving transfer-related events during file upload.
  */
-interface TruvideoSdkTransferListener {
+interface TruvideoSdkUploadCallback {
 
     /**
      * Called when a file transfer operation is completed successfully.
