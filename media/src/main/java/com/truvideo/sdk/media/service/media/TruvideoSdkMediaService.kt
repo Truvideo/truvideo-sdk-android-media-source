@@ -11,7 +11,10 @@ internal class TruvideoSdkMediaService : TruvideoSdkMediaServiceInterface {
     private val common = TruvideoSdk.instance
 
     override suspend fun createMedia(
-        title: String, url: String, size: Long, type: String
+        title: String,
+        url: String,
+        size: Long,
+        type: String
     ): String {
         common.auth.refreshAuthentication()
 

@@ -30,7 +30,12 @@ interface TruvideoSdkMedia {
      * and the necessary credentials are available.
      *
      * @param context The Android application context.
-     * @param key The key associated with the file transfer operation to be canceled.
+     * @param id The id associated with the file transfer operation to be canceled.
      */
-    fun cancel(context: Context, key: String)
+    suspend fun cancel(context: Context, id: String)
+
+
+    fun cancel(context: Context, id: String, callback: TruvideoSdkCancelCallback)
+
+
 }
