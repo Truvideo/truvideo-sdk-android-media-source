@@ -5,5 +5,5 @@ import androidx.room.PrimaryKey
 
 @Entity
 data class MediaEntity(
-    @PrimaryKey val id: String, val mediaLocalId: Int
+    @PrimaryKey val id: String, val externalId: Int
 )

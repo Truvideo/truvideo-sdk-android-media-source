@@ -11,6 +11,6 @@ interface MediaDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertMedia(media: MediaEntity)
 
-    @Query("SELECT mediaLocalId FROM MediaEntity WHERE id = :id")
-    fun getMediaLocalId(id: String): Int?
+    @Query("SELECT externalId FROM MediaEntity WHERE id = :id")
+    fun getExternalId(id: String): Int?
 }

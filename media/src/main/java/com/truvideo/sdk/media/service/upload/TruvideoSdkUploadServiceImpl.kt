@@ -2,7 +2,6 @@ package com.truvideo.sdk.media.service.upload
 
 import android.content.Context
 import android.net.Uri
-import androidx.room.Room
 import com.amazonaws.ClientConfiguration
 import com.amazonaws.auth.CognitoCredentialsProvider
 import com.amazonaws.mobile.client.AWSMobileClient
@@ -15,9 +14,9 @@ import com.amazonaws.regions.Regions
 import com.amazonaws.services.s3.AmazonS3Client
 import com.amazonaws.services.s3.S3ClientOptions
 import com.amazonaws.services.s3.model.CannedAccessControlList
-import com.truvideo.sdk.media.data.AppDatabase
 import com.truvideo.sdk.media.interfaces.TruvideoSdkUploadCallback
 import com.truvideo.sdk.media.model.MediaEntity
+import com.truvideo.sdk.media.repository.MediaRepository
 import com.truvideo.sdk.media.service.media.TruvideoSdkMediaService
 import com.truvideo.sdk.media.util.FileUriUtil
 import io.ktor.util.toUpperCasePreservingASCIIRules
@@ -38,6 +37,7 @@ internal class TruvideoSdkUploadServiceImpl(
     private var ioScope = CoroutineScope(Dispatchers.IO)
     private var mainScope = CoroutineScope(Dispatchers.Main)
     private val common = TruvideoSdk.instance
+    private val mediaRepository = MediaRepository()
 
     override suspend fun upload(
         context: Context,
@@ -179,13 +179,10 @@ internal class TruvideoSdkUploadServiceImpl(
             }
         })
 
-        // Store the local media id
-        val mediaLocalId = transferObserver.id
+        // Store the external media id
+        val externalId = transferObserver.id
 
-        val database: AppDatabase by lazy {
-            Room.databaseBuilder(context, AppDatabase::class.java, "app-database").build()
-        }
-        database.mediaDao().insertMedia(MediaEntity(id, mediaLocalId))
+        mediaRepository.insertMedia(context, MediaEntity(id, externalId))
     }
 
     override suspend fun cancel(
@@ -194,11 +191,7 @@ internal class TruvideoSdkUploadServiceImpl(
         region: String,
         poolId: String,
     ) {
-        val database: AppDatabase by lazy {
-            Room.databaseBuilder(context, AppDatabase::class.java, "app-database").build()
-        }
-
-        val s3Id = database.mediaDao().getMediaLocalId(id) ?: -1
+        val s3Id = mediaRepository.getExternalId(context, id) ?: -1
         if (s3Id == -1) {
             throw TruvideoSdkException("Upload request not found")
         }
@@ -214,11 +207,7 @@ internal class TruvideoSdkUploadServiceImpl(
         val client = getClient(region, poolId)
         val transferUtility = getTransferUtility(context, client)
 
-        val database: AppDatabase by lazy {
-            Room.databaseBuilder(context, AppDatabase::class.java, "app-database").build()
-        }
-
-        val s3Id = database.mediaDao().getMediaLocalId(id) ?: -1
+        val s3Id = mediaRepository.getExternalId(context, id) ?: -1
         if (s3Id == -1) {
             throw TruvideoSdkException("Upload request not found")
         }
