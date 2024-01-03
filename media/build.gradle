@@ -2,6 +2,7 @@ plugins {
     id 'com.android.library'
     id 'org.jetbrains.kotlin.android'
     id 'maven-publish'
+    id 'kotlin-kapt'
 }
 
 def propertiesFile = rootProject.file("media/src/main/assets/version.properties")
@@ -51,11 +52,21 @@ dependencies {
     implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.6.2'
     implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.6.2'
 
+    // S3
     implementation 'com.amazonaws:aws-android-sdk-mobile-client:2.16.6'
     implementation 'com.amazonaws:aws-android-sdk-s3:2.44.0'
     implementation 'com.amazonaws:aws-android-sdk-cognito:2.16.6'
     implementation 'com.amazonaws:aws-android-sdk-auth-userpools:2.16.6'
     implementation 'com.amazonaws:aws-android-sdk-auth-ui:2.6.10'
+
+    // Room
+    def room_version = "2.6.1"
+
+    implementation "androidx.room:room-runtime:$room_version"
+    annotationProcessor "androidx.room:room-compiler:$room_version"
+
+    // To use Kotlin annotation processing tool (kapt)
+    kapt "androidx.room:room-compiler:$room_version"
 
     testImplementation 'junit:junit:4.13.2'
     testImplementation "androidx.test:core:1.5.0"
@@ -65,7 +76,7 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
 
-    //Common
+    // Common
     var commonVersion = properties.getProperty("commonVersion")
     implementation("com.github.Truvideo:truvideo-sdk-android-common:$commonVersion")
 

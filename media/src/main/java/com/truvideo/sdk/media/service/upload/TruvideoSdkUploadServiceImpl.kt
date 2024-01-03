@@ -2,6 +2,7 @@ package com.truvideo.sdk.media.service.upload
 
 import android.content.Context
 import android.net.Uri
+import androidx.room.Room
 import com.amazonaws.ClientConfiguration
 import com.amazonaws.auth.CognitoCredentialsProvider
 import com.amazonaws.mobile.client.AWSMobileClient
@@ -14,7 +15,9 @@ import com.amazonaws.regions.Regions
 import com.amazonaws.services.s3.AmazonS3Client
 import com.amazonaws.services.s3.S3ClientOptions
 import com.amazonaws.services.s3.model.CannedAccessControlList
+import com.truvideo.sdk.media.data.AppDatabase
 import com.truvideo.sdk.media.interfaces.TruvideoSdkUploadCallback
+import com.truvideo.sdk.media.model.MediaEntity
 import com.truvideo.sdk.media.service.media.TruvideoSdkMediaService
 import com.truvideo.sdk.media.util.FileUriUtil
 import io.ktor.util.toUpperCasePreservingASCIIRules
@@ -35,7 +38,6 @@ internal class TruvideoSdkUploadServiceImpl(
     private var ioScope = CoroutineScope(Dispatchers.IO)
     private var mainScope = CoroutineScope(Dispatchers.Main)
     private val common = TruvideoSdk.instance
-
 
     override suspend fun upload(
         context: Context,
@@ -100,18 +102,14 @@ internal class TruvideoSdkUploadServiceImpl(
         if (!isOnline) {
             mainScope.launch {
                 callback.onError(
-                    id,
-                    TruvideoSdkConnectivityRequiredException()
+                    id, TruvideoSdkConnectivityRequiredException()
                 )
             }
             return
         }
 
         val transferObserver = transferUtility.upload(
-            bucketName,
-            awsPath,
-            fileToUpload,
-            acl
+            bucketName, awsPath, fileToUpload, acl
         )
 
         transferObserver.setTransferListener(object : TransferListener {
@@ -128,16 +126,12 @@ internal class TruvideoSdkUploadServiceImpl(
 
                         try {
                             val mediaURL = mediaService.createMedia(
-                                title = fileName,
-                                url = url,
-                                size = size,
-                                type = type
+                                title = fileName, url = url, size = size, type = type
                             )
 
                             mainScope.launch {
                                 callback.onComplete(
-                                    id,
-                                    mediaURL
+                                    id, mediaURL
                                 )
                             }
 
@@ -152,8 +146,7 @@ internal class TruvideoSdkUploadServiceImpl(
                             } else {
                                 mainScope.launch {
                                     callback.onError(
-                                        id,
-                                        TruvideoSdkException("Error creating file media")
+                                        id, TruvideoSdkException("Error creating file media")
                                     )
                                 }
                             }
@@ -163,9 +156,7 @@ internal class TruvideoSdkUploadServiceImpl(
             }
 
             override fun onProgressChanged(
-                s3Id: Int,
-                bytesCurrent: Long,
-                bytesTotal: Long
+                s3Id: Int, bytesCurrent: Long, bytesTotal: Long
             ) {
                 size = bytesTotal
                 val progress = (bytesCurrent * 100 / bytesTotal).toInt()
@@ -182,8 +173,7 @@ internal class TruvideoSdkUploadServiceImpl(
 
                 mainScope.launch {
                     callback.onError(
-                        id,
-                        TruvideoSdkException("Error uploading the file")
+                        id, TruvideoSdkException("Error uploading the file")
                     )
                 }
             }
@@ -191,7 +181,11 @@ internal class TruvideoSdkUploadServiceImpl(
 
         // Store the local media id
         val mediaLocalId = transferObserver.id
-        common.localStorage.storeInt("media-id-$id", mediaLocalId)
+
+        val database: AppDatabase by lazy {
+            Room.databaseBuilder(context, AppDatabase::class.java, "app-database").build()
+        }
+        database.mediaDao().insertMedia(MediaEntity(id, mediaLocalId))
     }
 
     override suspend fun cancel(
@@ -200,7 +194,11 @@ internal class TruvideoSdkUploadServiceImpl(
         region: String,
         poolId: String,
     ) {
-        val s3Id = common.localStorage.readInt("media-id-$id", -1)
+        val database: AppDatabase by lazy {
+            Room.databaseBuilder(context, AppDatabase::class.java, "app-database").build()
+        }
+
+        val s3Id = database.mediaDao().getMediaLocalId(id) ?: -1
         if (s3Id == -1) {
             throw TruvideoSdkException("Upload request not found")
         }
@@ -211,20 +209,22 @@ internal class TruvideoSdkUploadServiceImpl(
     }
 
     override suspend fun getState(
-        context: Context,
-        region: String,
-        poolId: String,
-        id: String
+        context: Context, region: String, poolId: String, id: String
     ): String {
         val client = getClient(region, poolId)
         val transferUtility = getTransferUtility(context, client)
 
-        val s3Id = common.localStorage.readInt("media-id-$id", -1)
+        val database: AppDatabase by lazy {
+            Room.databaseBuilder(context, AppDatabase::class.java, "app-database").build()
+        }
+
+        val s3Id = database.mediaDao().getMediaLocalId(id) ?: -1
         if (s3Id == -1) {
             throw TruvideoSdkException("Upload request not found")
         }
 
-        val transfer = transferUtility.getTransferById(s3Id) ?: throw TruvideoSdkException("Upload request not found")
+        val transfer = transferUtility.getTransferById(s3Id)
+            ?: throw TruvideoSdkException("Upload request not found")
         return transfer.state.name
     }
 
@@ -248,9 +248,7 @@ internal class TruvideoSdkUploadServiceImpl(
         clientConfiguration.socketTimeout = 10 * 60 * 1000
         val credentialsProvider = CognitoCredentialsProvider(poolId, parsedRegion)
         val client = AmazonS3Client(
-            credentialsProvider,
-            Region.getRegion(parsedRegion),
-            clientConfiguration
+            credentialsProvider, Region.getRegion(parsedRegion), clientConfiguration
         )
 
         //TODO: check accelerate
@@ -263,17 +261,12 @@ internal class TruvideoSdkUploadServiceImpl(
     }
 
     private suspend fun getTransferUtility(
-        context: Context,
-        client: AmazonS3Client
+        context: Context, client: AmazonS3Client
     ): TransferUtility = suspendCoroutine {
         TransferNetworkLossHandler.getInstance(context)
         val awsConfiguration = AWSMobileClient.getInstance().configuration
-        val transferUtility = TransferUtility
-            .builder()
-            .context(context)
-            .s3Client(client)
-            .awsConfiguration(awsConfiguration)
-            .build()
+        val transferUtility = TransferUtility.builder().context(context).s3Client(client)
+            .awsConfiguration(awsConfiguration).build()
 
         it.resumeWith(Result.success(transferUtility))
     }
