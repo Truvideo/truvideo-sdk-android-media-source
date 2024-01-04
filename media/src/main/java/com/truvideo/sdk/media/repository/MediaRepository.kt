@@ -27,4 +27,11 @@ class MediaRepository {
     fun getAllUploadRequests(context: Context): LiveData<List<MediaEntity>> {
         return DatabaseSingleton.getDatabase(context).mediaDao().getAllUploadRequests()
     }
+
+    fun getAllUploadRequestsByStatus(
+        context: Context, status: MediaEntityStatus
+    ): LiveData<List<MediaEntity>> {
+        return DatabaseSingleton.getDatabase(context).mediaDao()
+            .getAllUploadRequestsByStatus(status)
+    }
 }

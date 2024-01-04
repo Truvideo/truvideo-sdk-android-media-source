@@ -6,6 +6,7 @@ import com.truvideo.sdk.media.interfaces.TruvideoSdkCancelCallback
 import com.truvideo.sdk.media.interfaces.TruvideoSdkGetCallback
 import com.truvideo.sdk.media.interfaces.TruvideoSdkMedia
 import com.truvideo.sdk.media.interfaces.TruvideoSdkUploadCallback
+import com.truvideo.sdk.media.model.MediaEntityStatus
 import com.truvideo.sdk.media.service.media.TruvideoSdkMediaService
 import com.truvideo.sdk.media.service.upload.TruvideoSdkUploadServiceImpl
 import kotlinx.coroutines.CoroutineScope
@@ -90,6 +91,40 @@ internal object TruvideoSdkMediaImpl : TruvideoSdkMedia {
                 callback.onComplete(
                     uploadService.getAllUploadRequests(
                         context = context,
+                    )
+                )
+            }
+        } catch (ex: Exception) {
+            ex.printStackTrace()
+
+            if (ex is TruvideoSdkException) {
+                throw ex
+            } else {
+                throw TruvideoSdkException("Unknown error")
+            }
+        }
+    }
+
+    override fun getAllUploadRequestsByStatus(
+        context: Context, status: MediaEntityStatus, callback: TruvideoSdkGetCallback
+    ) {
+        try {
+            val isAuthenticated = common.auth.isAuthenticated
+            if (!isAuthenticated) {
+                callback.onError(TruvideoSdkAuthenticationRequiredException())
+                return
+            }
+
+            val credentials = common.auth.settings?.credentials
+            if (credentials == null) {
+                callback.onError(TruvideoSdkException("Credentials not found"))
+                return
+            }
+
+            ioScope.launch {
+                callback.onComplete(
+                    uploadService.getAllUploadRequestsByStatus(
+                        context = context, status = status
                     )
                 )
             }

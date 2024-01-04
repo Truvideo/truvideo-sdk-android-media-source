@@ -25,4 +25,16 @@ interface MediaDao {
 
     @Query("SELECT * FROM MediaEntity")
     fun getAllUploadRequests(): LiveData<List<MediaEntity>>
+
+    @Query("SELECT * FROM MediaEntity WHERE status = :status")
+    fun getAllUploadRequestsByStatus(status: MediaEntityStatus): LiveData<List<MediaEntity>>
+
+    //get all upload requests
+    //get upload request where status = X
+    //TODO get request by id
+    //TODO delete request
+    //stream all requests
+    //stream request where status = X
+    //TODO stream request by id
+    //TODO delete all request where status = x
 }

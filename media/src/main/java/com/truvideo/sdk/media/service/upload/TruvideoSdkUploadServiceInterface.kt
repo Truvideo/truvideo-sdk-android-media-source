@@ -5,6 +5,7 @@ import android.net.Uri
 import androidx.lifecycle.LiveData
 import com.truvideo.sdk.media.interfaces.TruvideoSdkUploadCallback
 import com.truvideo.sdk.media.model.MediaEntity
+import com.truvideo.sdk.media.model.MediaEntityStatus
 
 internal interface TruvideoSdkUploadServiceInterface {
 
@@ -31,4 +32,8 @@ internal interface TruvideoSdkUploadServiceInterface {
     ): String
 
     suspend fun getAllUploadRequests(context: Context): LiveData<List<MediaEntity>>
+    suspend fun getAllUploadRequestsByStatus(
+        context: Context,
+        status: MediaEntityStatus
+    ): LiveData<List<MediaEntity>>
 }

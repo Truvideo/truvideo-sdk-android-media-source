@@ -2,6 +2,7 @@ package com.truvideo.sdk.media.interfaces
 
 import android.content.Context
 import android.net.Uri
+import com.truvideo.sdk.media.model.MediaEntityStatus
 
 interface TruvideoSdkMedia {
 
@@ -38,4 +39,9 @@ interface TruvideoSdkMedia {
     fun cancel(context: Context, id: String, callback: TruvideoSdkCancelCallback)
 
     fun getAllUploadRequests(context: Context, callback: TruvideoSdkGetCallback)
+    fun getAllUploadRequestsByStatus(
+        context: Context,
+        status: MediaEntityStatus,
+        callback: TruvideoSdkGetCallback
+    )
 }
