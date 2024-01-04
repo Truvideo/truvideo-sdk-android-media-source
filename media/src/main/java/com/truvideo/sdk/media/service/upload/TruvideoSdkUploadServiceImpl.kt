@@ -17,6 +17,7 @@ import com.amazonaws.services.s3.S3ClientOptions
 import com.amazonaws.services.s3.model.CannedAccessControlList
 import com.truvideo.sdk.media.interfaces.TruvideoSdkUploadCallback
 import com.truvideo.sdk.media.model.MediaEntity
+import com.truvideo.sdk.media.model.MediaEntityStatus
 import com.truvideo.sdk.media.repository.MediaRepository
 import com.truvideo.sdk.media.service.media.TruvideoSdkMediaService
 import com.truvideo.sdk.media.util.FileUriUtil
@@ -109,6 +110,8 @@ internal class TruvideoSdkUploadServiceImpl(
             return
         }
 
+        mediaRepository.insertMedia(context, MediaEntity(id, status = MediaEntityStatus.IDLE))
+
         val transferObserver = transferUtility.upload(
             bucketName, awsPath, fileToUpload, acl
         )
@@ -135,8 +138,9 @@ internal class TruvideoSdkUploadServiceImpl(
                                     id, mediaURL
                                 )
                             }
-
+                            mediaRepository.updateStatus(context, id, MediaEntityStatus.COMPLETED)
                         } catch (ex: Exception) {
+                            mediaRepository.updateStatus(context, id, MediaEntityStatus.ERROR)
                             //TODO: remove this to avoid expose internal errors to the final user
                             ex.printStackTrace()
 
@@ -167,6 +171,7 @@ internal class TruvideoSdkUploadServiceImpl(
             }
 
             override fun onError(s3Id: Int, ex: Exception) {
+                mediaRepository.updateStatus(context, id, MediaEntityStatus.ERROR)
                 tryDeleteFile(fileToUpload)
 
                 //TODO: remove this to avoid expose internal errors to the final user
@@ -183,7 +188,9 @@ internal class TruvideoSdkUploadServiceImpl(
         // Store the external media id
         val externalId = transferObserver.id
 
-        mediaRepository.insertMedia(context, MediaEntity(id, externalId))
+        mediaRepository.update(
+            context, MediaEntity(id, externalId = externalId, status = MediaEntityStatus.PROCESSING)
+        )
     }
 
     override suspend fun getAllUploadRequests(context: Context): LiveData<List<MediaEntity>> {
