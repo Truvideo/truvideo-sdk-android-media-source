@@ -2,7 +2,9 @@ package com.truvideo.sdk.media.service.upload
 
 import android.content.Context
 import android.net.Uri
+import androidx.lifecycle.LiveData
 import com.truvideo.sdk.media.interfaces.TruvideoSdkUploadCallback
+import com.truvideo.sdk.media.model.MediaEntity
 
 internal interface TruvideoSdkUploadServiceInterface {
 
@@ -17,7 +19,6 @@ internal interface TruvideoSdkUploadServiceInterface {
         callback: TruvideoSdkUploadCallback
     )
 
-
     suspend fun cancel(
         context: Context,
         id: String,
@@ -26,9 +27,8 @@ internal interface TruvideoSdkUploadServiceInterface {
     )
 
     suspend fun getState(
-        context: Context,
-        region: String,
-        poolId: String,
-        id: String
+        context: Context, region: String, poolId: String, id: String
     ): String
+
+    suspend fun getAllUploadRequests(context: Context): LiveData<List<MediaEntity>>
 }

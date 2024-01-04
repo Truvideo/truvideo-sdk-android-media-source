@@ -2,6 +2,7 @@ package com.truvideo.sdk.media.service.upload
 
 import android.content.Context
 import android.net.Uri
+import androidx.lifecycle.LiveData
 import com.amazonaws.ClientConfiguration
 import com.amazonaws.auth.CognitoCredentialsProvider
 import com.amazonaws.mobile.client.AWSMobileClient
@@ -183,6 +184,10 @@ internal class TruvideoSdkUploadServiceImpl(
         val externalId = transferObserver.id
 
         mediaRepository.insertMedia(context, MediaEntity(id, externalId))
+    }
+
+    override suspend fun getAllUploadRequests(context: Context): LiveData<List<MediaEntity>> {
+        return mediaRepository.getAllUploadRequests(context)
     }
 
     override suspend fun cancel(

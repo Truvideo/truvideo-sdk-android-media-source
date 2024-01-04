@@ -3,6 +3,7 @@ package com.truvideo.sdk.media
 import android.content.Context
 import android.net.Uri
 import com.truvideo.sdk.media.interfaces.TruvideoSdkCancelCallback
+import com.truvideo.sdk.media.interfaces.TruvideoSdkGetCallback
 import com.truvideo.sdk.media.interfaces.TruvideoSdkMedia
 import com.truvideo.sdk.media.interfaces.TruvideoSdkUploadCallback
 import com.truvideo.sdk.media.service.media.TruvideoSdkMediaService
@@ -26,9 +27,7 @@ internal object TruvideoSdkMediaImpl : TruvideoSdkMedia {
     private var ioScope = CoroutineScope(Dispatchers.IO)
 
     override fun upload(
-        context: Context,
-        file: Uri,
-        callback: TruvideoSdkUploadCallback
+        context: Context, file: Uri, callback: TruvideoSdkUploadCallback
     ): String {
         try {
             val mediaLocalKey = UUID.randomUUID().toString()
@@ -71,6 +70,40 @@ internal object TruvideoSdkMediaImpl : TruvideoSdkMedia {
         }
     }
 
+    override fun getAllUploadRequests(
+        context: Context, callback: TruvideoSdkGetCallback
+    ) {
+        try {
+            val isAuthenticated = common.auth.isAuthenticated
+            if (!isAuthenticated) {
+                callback.onError(TruvideoSdkAuthenticationRequiredException())
+                return
+            }
+
+            val credentials = common.auth.settings?.credentials
+            if (credentials == null) {
+                callback.onError(TruvideoSdkException("Credentials not found"))
+                return
+            }
+
+            ioScope.launch {
+                callback.onComplete(
+                    uploadService.getAllUploadRequests(
+                        context = context,
+                    )
+                )
+            }
+        } catch (ex: Exception) {
+            ex.printStackTrace()
+
+            if (ex is TruvideoSdkException) {
+                throw ex
+            } else {
+                throw TruvideoSdkException("Unknown error")
+            }
+        }
+    }
+
     override suspend fun cancel(context: Context, id: String) {
         try {
             val isAuthenticated = common.auth.isAuthenticated
@@ -78,7 +111,8 @@ internal object TruvideoSdkMediaImpl : TruvideoSdkMedia {
                 throw TruvideoSdkAuthenticationRequiredException()
             }
 
-            val credentials = common.auth.settings?.credentials ?: throw TruvideoSdkException("Credentials not found")
+            val credentials = common.auth.settings?.credentials
+                ?: throw TruvideoSdkException("Credentials not found")
             val poolId: String = credentials.identityPoolID
             val region: String = credentials.region
 
@@ -95,9 +129,7 @@ internal object TruvideoSdkMediaImpl : TruvideoSdkMedia {
     }
 
     override fun cancel(
-        context: Context,
-        id: String,
-        callback: TruvideoSdkCancelCallback
+        context: Context, id: String, callback: TruvideoSdkCancelCallback
     ) {
         ioScope.launch {
             try {

@@ -1,5 +1,6 @@
 package com.truvideo.sdk.media.data
 
+import androidx.lifecycle.LiveData
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
@@ -13,4 +14,7 @@ interface MediaDao {
 
     @Query("SELECT externalId FROM MediaEntity WHERE id = :id")
     fun getExternalId(id: String): Int?
+
+    @Query("SELECT * FROM MediaEntity")
+    fun getAllUploadRequests(): LiveData<List<MediaEntity>>
 }

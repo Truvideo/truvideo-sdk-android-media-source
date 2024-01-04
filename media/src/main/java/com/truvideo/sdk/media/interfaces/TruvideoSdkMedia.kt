@@ -37,5 +37,5 @@ interface TruvideoSdkMedia {
 
     fun cancel(context: Context, id: String, callback: TruvideoSdkCancelCallback)
 
-
+    fun getAllUploadRequests(context: Context, callback: TruvideoSdkGetCallback)
 }
