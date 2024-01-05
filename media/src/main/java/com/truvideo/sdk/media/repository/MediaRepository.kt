@@ -32,6 +32,10 @@ class MediaRepository {
         return DatabaseSingleton.getDatabase(context).mediaDao().getMediaById(id)
     }
 
+    fun getAllUploadRequests(context: Context): List<MediaEntity> {
+        return DatabaseSingleton.getDatabase(context).mediaDao().getAllUploadRequests()
+    }
+
     fun streamMediaById(context: Context, id: String): LiveData<MediaEntity> {
         return DatabaseSingleton.getDatabase(context).mediaDao().streamMediaById(id)
     }
