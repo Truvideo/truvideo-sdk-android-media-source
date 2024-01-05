@@ -2,6 +2,7 @@ package com.truvideo.sdk.media
 
 import android.content.Context
 import android.net.Uri
+import com.truvideo.sdk.media.interfaces.TruvideoSdkAuthCallback
 import com.truvideo.sdk.media.interfaces.TruvideoSdkCancelCallback
 import com.truvideo.sdk.media.interfaces.TruvideoSdkMedia
 import com.truvideo.sdk.media.interfaces.TruvideoSdkStreamElementCallback
@@ -75,19 +76,7 @@ internal object TruvideoSdkMediaImpl : TruvideoSdkMedia {
     override fun streamAllUploadRequests(
         context: Context, callback: TruvideoSdkStreamListCallback
     ) {
-        try {
-            val isAuthenticated = common.auth.isAuthenticated
-            if (!isAuthenticated) {
-                callback.onError(TruvideoSdkAuthenticationRequiredException())
-                return
-            }
-
-            val credentials = common.auth.settings?.credentials
-            if (credentials == null) {
-                callback.onError(TruvideoSdkException("Credentials not found"))
-                return
-            }
-
+        performAuthenticatedAction(callback) {
             ioScope.launch {
                 callback.onComplete(
                     uploadService.streamAllUploadRequests(
@@ -95,33 +84,13 @@ internal object TruvideoSdkMediaImpl : TruvideoSdkMedia {
                     )
                 )
             }
-        } catch (ex: Exception) {
-            ex.printStackTrace()
-
-            if (ex is TruvideoSdkException) {
-                throw ex
-            } else {
-                throw TruvideoSdkException("Unknown error")
-            }
         }
     }
 
     override fun streamMediaById(
         context: Context, id: String, callback: TruvideoSdkStreamElementCallback
     ) {
-        try {
-            val isAuthenticated = common.auth.isAuthenticated
-            if (!isAuthenticated) {
-                callback.onError(TruvideoSdkAuthenticationRequiredException())
-                return
-            }
-
-            val credentials = common.auth.settings?.credentials
-            if (credentials == null) {
-                callback.onError(TruvideoSdkException("Credentials not found"))
-                return
-            }
-
+        performAuthenticatedAction(callback) {
             ioScope.launch {
                 callback.onComplete(
                     uploadService.streamMediaById(
@@ -129,47 +98,19 @@ internal object TruvideoSdkMediaImpl : TruvideoSdkMedia {
                     )
                 )
             }
-        } catch (ex: Exception) {
-            ex.printStackTrace()
-
-            if (ex is TruvideoSdkException) {
-                throw ex
-            } else {
-                throw TruvideoSdkException("Unknown error")
-            }
         }
     }
 
     override fun streamAllUploadRequestsByStatus(
         context: Context, status: MediaEntityStatus, callback: TruvideoSdkStreamListCallback
     ) {
-        try {
-            val isAuthenticated = common.auth.isAuthenticated
-            if (!isAuthenticated) {
-                callback.onError(TruvideoSdkAuthenticationRequiredException())
-                return
-            }
-
-            val credentials = common.auth.settings?.credentials
-            if (credentials == null) {
-                callback.onError(TruvideoSdkException("Credentials not found"))
-                return
-            }
-
+        performAuthenticatedAction(callback) {
             ioScope.launch {
                 callback.onComplete(
                     uploadService.streamAllUploadRequestsByStatus(
                         context = context, status = status
                     )
                 )
-            }
-        } catch (ex: Exception) {
-            ex.printStackTrace()
-
-            if (ex is TruvideoSdkException) {
-                throw ex
-            } else {
-                throw TruvideoSdkException("Unknown error")
             }
         }
     }
@@ -213,6 +154,33 @@ internal object TruvideoSdkMediaImpl : TruvideoSdkMedia {
                 } else {
                     callback.onError(id, TruvideoSdkException("Unknown error"))
                 }
+            }
+        }
+    }
+
+    private fun <T : TruvideoSdkAuthCallback> performAuthenticatedAction(
+        callback: T, action: () -> Unit
+    ) {
+        try {
+            val isAuthenticated = common.auth.isAuthenticated
+            if (!isAuthenticated) {
+                callback.onAuthError(TruvideoSdkAuthenticationRequiredException())
+                return
+            }
+
+            val credentials = common.auth.settings?.credentials
+            if (credentials == null) {
+                callback.onAuthError(TruvideoSdkException("Credentials not found"))
+                return
+            }
+            action.invoke()
+        } catch (ex: Exception) {
+            ex.printStackTrace()
+
+            if (ex is TruvideoSdkException) {
+                throw ex
+            } else {
+                throw TruvideoSdkException("Unknown error")
             }
         }
     }

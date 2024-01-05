@@ -171,7 +171,9 @@ internal class TruvideoSdkUploadServiceImpl(
             }
 
             override fun onError(s3Id: Int, ex: Exception) {
-                mediaRepository.updateStatus(context, id, MediaEntityStatus.ERROR)
+                ioScope.launch {
+                    mediaRepository.updateStatus(context, id, MediaEntityStatus.ERROR)
+                }
                 tryDeleteFile(fileToUpload)
 
                 //TODO: remove this to avoid expose internal errors to the final user
