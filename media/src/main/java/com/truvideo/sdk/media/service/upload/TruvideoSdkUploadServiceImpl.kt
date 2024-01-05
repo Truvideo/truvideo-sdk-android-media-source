@@ -202,6 +202,12 @@ internal class TruvideoSdkUploadServiceImpl(
         return mediaRepository.getAllUploadRequests(context)
     }
 
+    override suspend fun getAllUploadRequestsByStatus(
+        context: Context, status: MediaEntityStatus
+    ): List<MediaEntity> {
+        return mediaRepository.getAllUploadRequestsByStatus(context, status)
+    }
+
     override suspend fun streamMediaById(
         context: Context, id: String
     ): LiveData<MediaEntity> {

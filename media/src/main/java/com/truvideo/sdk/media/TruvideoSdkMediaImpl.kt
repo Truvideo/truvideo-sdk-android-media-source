@@ -4,8 +4,8 @@ import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.LiveData
 import com.truvideo.sdk.media.interfaces.TruvideoSdkAuthCallback
-import com.truvideo.sdk.media.interfaces.TruvideoSdkGenericCallback
 import com.truvideo.sdk.media.interfaces.TruvideoSdkCancelCallback
+import com.truvideo.sdk.media.interfaces.TruvideoSdkGenericCallback
 import com.truvideo.sdk.media.interfaces.TruvideoSdkMedia
 import com.truvideo.sdk.media.interfaces.TruvideoSdkUploadCallback
 import com.truvideo.sdk.media.model.MediaEntity
@@ -89,13 +89,29 @@ internal object TruvideoSdkMediaImpl : TruvideoSdkMedia {
     }
 
     override fun getAllUploadRequests(
-        context: Context, id: String, callback: TruvideoSdkGenericCallback<List<MediaEntity>>
+        context: Context, callback: TruvideoSdkGenericCallback<List<MediaEntity>>
     ) {
         performAuthenticatedAction(callback) {
             ioScope.launch {
                 callback.onComplete(
                     uploadService.getAllUploadRequests(
                         context = context
+                    )
+                )
+            }
+        }
+    }
+
+    override fun getAllUploadRequestsByStatus(
+        context: Context,
+        status: MediaEntityStatus,
+        callback: TruvideoSdkGenericCallback<List<MediaEntity>>
+    ) {
+        performAuthenticatedAction(callback) {
+            ioScope.launch {
+                callback.onComplete(
+                    uploadService.getAllUploadRequestsByStatus(
+                        context = context, status = status
                     )
                 )
             }

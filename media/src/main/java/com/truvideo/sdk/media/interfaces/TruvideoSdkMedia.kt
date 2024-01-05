@@ -95,10 +95,24 @@ interface TruvideoSdkMedia {
      * This method retrieves a list of all upload requests for further processing.
      *
      * @param context The Android application context.
-     * @param id The ID associated with the file transfer operation.
      * @param callback The listener to handle the retrieved list of upload requests.
      */
     fun getAllUploadRequests(
-        context: Context, id: String, callback: TruvideoSdkGenericCallback<List<MediaEntity>>
+        context: Context, callback: TruvideoSdkGenericCallback<List<MediaEntity>>
+    )
+
+    /**
+     * Retrieves a list of upload requests filtered by status.
+     *
+     * This method retrieves a list of upload requests with the specified status for further processing.
+     *
+     * @param context The Android application context.
+     * @param status The status by which to filter the upload requests.
+     * @param callback The listener to handle the retrieved list of upload requests.
+     */
+    fun getAllUploadRequestsByStatus(
+        context: Context,
+        status: MediaEntityStatus,
+        callback: TruvideoSdkGenericCallback<List<MediaEntity>>
     )
 }
