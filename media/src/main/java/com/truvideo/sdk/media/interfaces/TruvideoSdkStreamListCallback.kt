@@ -5,9 +5,9 @@ import com.truvideo.sdk.media.model.MediaEntity
 import truvideo.sdk.common.exception.TruvideoSdkException
 
 /**
- * Interface for receiving callbacks related to file transfer operations in Truvideo SDK.
+ * Interface for receiving callbacks as streams related to file transfer operations in Truvideo SDK.
  */
-interface TruvideoSdkGetCallback {
+interface TruvideoSdkStreamListCallback {
 
     /**
      * Called when a get information operation is completed successfully.

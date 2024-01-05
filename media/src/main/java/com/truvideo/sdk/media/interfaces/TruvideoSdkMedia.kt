@@ -4,6 +4,9 @@ import android.content.Context
 import android.net.Uri
 import com.truvideo.sdk.media.model.MediaEntityStatus
 
+/**
+ * Interface for handling media file operations in Truvideo SDK.
+ */
 interface TruvideoSdkMedia {
 
     /**
@@ -13,14 +16,12 @@ interface TruvideoSdkMedia {
      * a unique key for the upload operation and checks the authentication status before proceeding.
      *
      * @param context The Android application context.
-     * @param callback The listener to handle transfer progress and errors.
      * @param file The URI of the file to be uploaded.
+     * @param callback The listener to handle transfer progress and errors.
      * @return A unique key associated with the upload process, which can be used for tracking and error handling.
      */
     fun upload(
-        context: Context,
-        file: Uri,
-        callback: TruvideoSdkUploadCallback
+        context: Context, file: Uri, callback: TruvideoSdkUploadCallback
     ): String
 
 
@@ -35,13 +36,49 @@ interface TruvideoSdkMedia {
      */
     suspend fun cancel(context: Context, id: String)
 
-
+    /**
+     * Cancels the ongoing file transfer associated with the provided key.
+     *
+     * This method cancels the transfer of a file associated with a given key, provided that the user is authenticated
+     * and the necessary credentials are available. The cancellation is handled through the specified callback.
+     *
+     * @param context The Android application context.
+     * @param id The id associated with the file transfer operation to be canceled.
+     * @param callback The listener to handle cancellation results.
+     */
     fun cancel(context: Context, id: String, callback: TruvideoSdkCancelCallback)
 
-    fun getAllUploadRequests(context: Context, callback: TruvideoSdkGetCallback)
-    fun getAllUploadRequestsByStatus(
-        context: Context,
-        status: MediaEntityStatus,
-        callback: TruvideoSdkGetCallback
+    /**
+     * Streams a list of all upload requests.
+     *
+     * This method streams a list of all upload requests to the specified callback.
+     *
+     * @param context The Android application context.
+     * @param callback The listener to handle the streamed list of upload requests.
+     */
+    fun streamAllUploadRequests(context: Context, callback: TruvideoSdkStreamListCallback)
+
+    /**
+     * Streams a list of upload requests filtered by status.
+     *
+     * This method streams a list of upload requests with the specified status to the specified callback.
+     *
+     * @param context The Android application context.
+     * @param status The status by which to filter the upload requests.
+     * @param callback The listener to handle the streamed list of upload requests.
+     */
+    fun streamAllUploadRequestsByStatus(
+        context: Context, status: MediaEntityStatus, callback: TruvideoSdkStreamListCallback
     )
+
+    /**
+     * Streams media information for a specific media ID.
+     *
+     * This method streams information about a media file with the specified ID to the provided callback.
+     *
+     * @param context The Android application context.
+     * @param id The ID of the media file.
+     * @param callback The listener to handle the streamed media information.
+     */
+    fun streamMediaById(context: Context, id: String, callback: TruvideoSdkStreamElementCallback)
 }

@@ -5,6 +5,7 @@ import androidx.lifecycle.LiveData
 import com.truvideo.sdk.media.data.DatabaseSingleton
 import com.truvideo.sdk.media.model.MediaEntity
 import com.truvideo.sdk.media.model.MediaEntityStatus
+import java.util.Date
 
 class MediaRepository {
 
@@ -13,25 +14,36 @@ class MediaRepository {
     }
 
     fun update(context: Context, media: MediaEntity) {
+        media.updatedAt = Date()
         DatabaseSingleton.getDatabase(context).mediaDao().updateMedia(media)
     }
 
     fun updateStatus(context: Context, id: String, status: MediaEntityStatus) {
-        DatabaseSingleton.getDatabase(context).mediaDao().updateStatus(id, status)
+        val media = getMediaById(context, id)
+        media.status = status
+        update(context, media)
     }
 
     fun getExternalId(context: Context, id: String): Int? {
         return DatabaseSingleton.getDatabase(context).mediaDao().getExternalId(id)
     }
 
-    fun getAllUploadRequests(context: Context): LiveData<List<MediaEntity>> {
-        return DatabaseSingleton.getDatabase(context).mediaDao().getAllUploadRequests()
+    fun getMediaById(context: Context, id: String): MediaEntity {
+        return DatabaseSingleton.getDatabase(context).mediaDao().getMediaById(id)
     }
 
-    fun getAllUploadRequestsByStatus(
+    fun streamMediaById(context: Context, id: String): LiveData<MediaEntity> {
+        return DatabaseSingleton.getDatabase(context).mediaDao().streamMediaById(id)
+    }
+
+    fun streamAllUploadRequests(context: Context): LiveData<List<MediaEntity>> {
+        return DatabaseSingleton.getDatabase(context).mediaDao().streamAllUploadRequests()
+    }
+
+    fun streamAllUploadRequestsByStatus(
         context: Context, status: MediaEntityStatus
     ): LiveData<List<MediaEntity>> {
         return DatabaseSingleton.getDatabase(context).mediaDao()
-            .getAllUploadRequestsByStatus(status)
+            .streamAllUploadRequestsByStatus(status)
     }
 }

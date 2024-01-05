@@ -3,8 +3,9 @@ package com.truvideo.sdk.media
 import android.content.Context
 import android.net.Uri
 import com.truvideo.sdk.media.interfaces.TruvideoSdkCancelCallback
-import com.truvideo.sdk.media.interfaces.TruvideoSdkGetCallback
 import com.truvideo.sdk.media.interfaces.TruvideoSdkMedia
+import com.truvideo.sdk.media.interfaces.TruvideoSdkStreamElementCallback
+import com.truvideo.sdk.media.interfaces.TruvideoSdkStreamListCallback
 import com.truvideo.sdk.media.interfaces.TruvideoSdkUploadCallback
 import com.truvideo.sdk.media.model.MediaEntityStatus
 import com.truvideo.sdk.media.service.media.TruvideoSdkMediaService
@@ -71,8 +72,8 @@ internal object TruvideoSdkMediaImpl : TruvideoSdkMedia {
         }
     }
 
-    override fun getAllUploadRequests(
-        context: Context, callback: TruvideoSdkGetCallback
+    override fun streamAllUploadRequests(
+        context: Context, callback: TruvideoSdkStreamListCallback
     ) {
         try {
             val isAuthenticated = common.auth.isAuthenticated
@@ -89,7 +90,7 @@ internal object TruvideoSdkMediaImpl : TruvideoSdkMedia {
 
             ioScope.launch {
                 callback.onComplete(
-                    uploadService.getAllUploadRequests(
+                    uploadService.streamAllUploadRequests(
                         context = context,
                     )
                 )
@@ -105,8 +106,8 @@ internal object TruvideoSdkMediaImpl : TruvideoSdkMedia {
         }
     }
 
-    override fun getAllUploadRequestsByStatus(
-        context: Context, status: MediaEntityStatus, callback: TruvideoSdkGetCallback
+    override fun streamMediaById(
+        context: Context, id: String, callback: TruvideoSdkStreamElementCallback
     ) {
         try {
             val isAuthenticated = common.auth.isAuthenticated
@@ -123,7 +124,41 @@ internal object TruvideoSdkMediaImpl : TruvideoSdkMedia {
 
             ioScope.launch {
                 callback.onComplete(
-                    uploadService.getAllUploadRequestsByStatus(
+                    uploadService.streamMediaById(
+                        context = context, id = id
+                    )
+                )
+            }
+        } catch (ex: Exception) {
+            ex.printStackTrace()
+
+            if (ex is TruvideoSdkException) {
+                throw ex
+            } else {
+                throw TruvideoSdkException("Unknown error")
+            }
+        }
+    }
+
+    override fun streamAllUploadRequestsByStatus(
+        context: Context, status: MediaEntityStatus, callback: TruvideoSdkStreamListCallback
+    ) {
+        try {
+            val isAuthenticated = common.auth.isAuthenticated
+            if (!isAuthenticated) {
+                callback.onError(TruvideoSdkAuthenticationRequiredException())
+                return
+            }
+
+            val credentials = common.auth.settings?.credentials
+            if (credentials == null) {
+                callback.onError(TruvideoSdkException("Credentials not found"))
+                return
+            }
+
+            ioScope.launch {
+                callback.onComplete(
+                    uploadService.streamAllUploadRequestsByStatus(
                         context = context, status = status
                     )
                 )

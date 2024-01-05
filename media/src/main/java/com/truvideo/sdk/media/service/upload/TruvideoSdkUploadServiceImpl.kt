@@ -188,19 +188,26 @@ internal class TruvideoSdkUploadServiceImpl(
         // Store the external media id
         val externalId = transferObserver.id
 
-        mediaRepository.update(
-            context, MediaEntity(id, externalId = externalId, status = MediaEntityStatus.PROCESSING)
-        )
+        val media = mediaRepository.getMediaById(context, id)
+        media.externalId = externalId
+        media.status = MediaEntityStatus.PROCESSING
+        mediaRepository.update(context, media)
     }
 
-    override suspend fun getAllUploadRequests(context: Context): LiveData<List<MediaEntity>> {
-        return mediaRepository.getAllUploadRequests(context)
+    override suspend fun streamMediaById(
+        context: Context, id: String
+    ): LiveData<MediaEntity> {
+        return mediaRepository.streamMediaById(context, id)
     }
 
-    override suspend fun getAllUploadRequestsByStatus(
+    override suspend fun streamAllUploadRequests(context: Context): LiveData<List<MediaEntity>> {
+        return mediaRepository.streamAllUploadRequests(context)
+    }
+
+    override suspend fun streamAllUploadRequestsByStatus(
         context: Context, status: MediaEntityStatus
     ): LiveData<List<MediaEntity>> {
-        return mediaRepository.getAllUploadRequestsByStatus(context, status)
+        return mediaRepository.streamAllUploadRequestsByStatus(context, status)
     }
 
     override suspend fun cancel(
@@ -217,6 +224,38 @@ internal class TruvideoSdkUploadServiceImpl(
         val client = getClient(region = region, poolId = poolId)
         val transferUtility = getTransferUtility(context, client)
         transferUtility.cancel(s3Id)
+    }
+
+    override suspend fun pause(
+        context: Context,
+        id: String,
+        region: String,
+        poolId: String,
+    ) {
+        val s3Id = mediaRepository.getExternalId(context, id) ?: -1
+        if (s3Id == -1) {
+            throw TruvideoSdkException("Upload request not found")
+        }
+
+        val client = getClient(region = region, poolId = poolId)
+        val transferUtility = getTransferUtility(context, client)
+        transferUtility.pause(s3Id)
+    }
+
+    override suspend fun resume(
+        context: Context,
+        id: String,
+        region: String,
+        poolId: String,
+    ) {
+        val s3Id = mediaRepository.getExternalId(context, id) ?: -1
+        if (s3Id == -1) {
+            throw TruvideoSdkException("Upload request not found")
+        }
+
+        val client = getClient(region = region, poolId = poolId)
+        val transferUtility = getTransferUtility(context, client)
+        transferUtility.resume(s3Id)
     }
 
     override suspend fun getState(
@@ -243,7 +282,6 @@ internal class TruvideoSdkUploadServiceImpl(
             ex.printStackTrace()
         }
     }
-
 
     private suspend fun getClient(
         region: String,
@@ -277,6 +315,5 @@ internal class TruvideoSdkUploadServiceImpl(
 
         it.resumeWith(Result.success(transferUtility))
     }
-
 
 }

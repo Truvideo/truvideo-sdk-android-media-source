@@ -4,12 +4,15 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
 import com.truvideo.sdk.media.data.Converters
+import java.util.Date
 
 @Entity
 data class MediaEntity(
     @PrimaryKey val id: String,
-    val externalId: Int? = null,
-    @TypeConverters(Converters::class) val status: MediaEntityStatus // status (idle, processing, error, completed)
+    var externalId: Int? = null,
+    @TypeConverters(Converters::class) var status: MediaEntityStatus,
+    @TypeConverters(Converters::class) val createdAt: Date = Date(),
+    @TypeConverters(Converters::class) var updatedAt: Date = Date()
 )
 
 enum class MediaEntityStatus {

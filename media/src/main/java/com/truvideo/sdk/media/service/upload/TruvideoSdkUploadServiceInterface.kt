@@ -31,9 +31,12 @@ internal interface TruvideoSdkUploadServiceInterface {
         context: Context, region: String, poolId: String, id: String
     ): String
 
-    suspend fun getAllUploadRequests(context: Context): LiveData<List<MediaEntity>>
-    suspend fun getAllUploadRequestsByStatus(
-        context: Context,
-        status: MediaEntityStatus
+    suspend fun streamAllUploadRequests(context: Context): LiveData<List<MediaEntity>>
+    suspend fun streamAllUploadRequestsByStatus(
+        context: Context, status: MediaEntityStatus
     ): LiveData<List<MediaEntity>>
+
+    suspend fun pause(context: Context, id: String, region: String, poolId: String)
+    suspend fun resume(context: Context, id: String, region: String, poolId: String)
+    suspend fun streamMediaById(context: Context, id: String): LiveData<MediaEntity>
 }
