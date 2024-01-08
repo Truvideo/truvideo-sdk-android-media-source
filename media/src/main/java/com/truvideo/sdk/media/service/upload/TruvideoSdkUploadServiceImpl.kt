@@ -165,6 +165,9 @@ internal class TruvideoSdkUploadServiceImpl(
             ) {
                 size = bytesTotal
                 val progress = (bytesCurrent * 100 / bytesTotal).toInt()
+                ioScope.launch {
+                    mediaRepository.updateProgress(context, id, progress)
+                }
                 mainScope.launch {
                     callback.onProgressChanged(id, progress)
                 }

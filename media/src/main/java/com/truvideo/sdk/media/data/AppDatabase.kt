@@ -5,7 +5,7 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.truvideo.sdk.media.model.MediaEntity
 
-@Database(entities = [MediaEntity::class], version = 5)
+@Database(entities = [MediaEntity::class], version = 6)
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun mediaDao(): MediaDao

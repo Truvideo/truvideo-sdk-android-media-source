@@ -10,6 +10,7 @@ import java.util.Date
 data class MediaEntity(
     @PrimaryKey val id: String,
     var externalId: Int? = null,
+    var progress: Int? = null,
     @TypeConverters(Converters::class) var status: MediaEntityStatus,
     @TypeConverters(Converters::class) val createdAt: Date = Date(),
     @TypeConverters(Converters::class) var updatedAt: Date = Date()

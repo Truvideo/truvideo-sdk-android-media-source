@@ -18,6 +18,12 @@ class MediaRepository {
         DatabaseSingleton.getDatabase(context).mediaDao().updateMedia(media)
     }
 
+    fun updateProgress(context: Context, id: String, progress: Int) {
+        val media = getMediaById(context, id)
+        media.progress = progress
+        update(context, media)
+    }
+
     fun updateStatus(context: Context, id: String, status: MediaEntityStatus) {
         val media = getMediaById(context, id)
         media.status = status
