@@ -24,9 +24,16 @@ class MediaRepository {
         update(context, media)
     }
 
-    fun updateStatus(context: Context, id: String, status: MediaEntityStatus) {
+    fun updateToCompletedStatus(context: Context, id: String) {
         val media = getMediaById(context, id)
-        media.status = status
+        media.status = MediaEntityStatus.COMPLETED
+        update(context, media)
+    }
+
+    fun updateToErrorStatus(context: Context, id: String, errorMessage: String? = "Generic Error") {
+        val media = getMediaById(context, id)
+        media.status = MediaEntityStatus.ERROR
+        media.errorMessage = errorMessage
         update(context, media)
     }
 
