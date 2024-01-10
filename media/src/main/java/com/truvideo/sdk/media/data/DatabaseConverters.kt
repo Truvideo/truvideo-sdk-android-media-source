@@ -1,10 +1,11 @@
 package com.truvideo.sdk.media.data
 
+import android.net.Uri
 import androidx.room.TypeConverter
 import com.truvideo.sdk.media.model.MediaEntityStatus
 import java.util.Date
 
-class Converters {
+internal class DatabaseConverters {
     @TypeConverter
     fun fromStatus(status: MediaEntityStatus): String {
         return status.name
@@ -23,6 +24,16 @@ class Converters {
     @TypeConverter
     fun toDate(date: Date?): Long? {
         return date?.time
+    }
+
+    @TypeConverter
+    fun fromUri(uri: Uri): String {
+        return uri.toString()
+    }
+
+    @TypeConverter
+    fun toUri(uriString: String): Uri {
+        return Uri.parse(uriString)
     }
 
 }

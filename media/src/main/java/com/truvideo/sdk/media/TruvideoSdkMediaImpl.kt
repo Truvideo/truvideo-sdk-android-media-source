@@ -7,6 +7,7 @@ import com.truvideo.sdk.media.interfaces.TruvideoSdkAuthCallback
 import com.truvideo.sdk.media.interfaces.TruvideoSdkCancelCallback
 import com.truvideo.sdk.media.interfaces.TruvideoSdkGenericCallback
 import com.truvideo.sdk.media.interfaces.TruvideoSdkMedia
+import com.truvideo.sdk.media.interfaces.TruvideoSdkPauseCallback
 import com.truvideo.sdk.media.interfaces.TruvideoSdkUploadCallback
 import com.truvideo.sdk.media.model.MediaEntity
 import com.truvideo.sdk.media.model.MediaEntityStatus
@@ -52,6 +53,47 @@ internal object TruvideoSdkMediaImpl : TruvideoSdkMedia {
                 uploadService.upload(
                     context = context,
                     file = file,
+                    bucketName = credentials.bucketName,
+                    region = credentials.region,
+                    poolId = credentials.identityPoolID,
+                    folder = credentials.bucketFolderMedia,
+                    id = mediaLocalKey,
+                    callback = callback
+                )
+            }
+
+            return mediaLocalKey
+
+        } catch (ex: Exception) {
+            ex.printStackTrace()
+
+            if (ex is TruvideoSdkException) {
+                throw ex
+            } else {
+                throw TruvideoSdkException("Unknown error")
+            }
+        }
+    }
+
+    override fun resume(
+        context: Context, mediaLocalKey: String, callback: TruvideoSdkUploadCallback
+    ): String {
+        try {
+            val isAuthenticated = common.auth.isAuthenticated
+            if (!isAuthenticated) {
+                callback.onError(mediaLocalKey, TruvideoSdkAuthenticationRequiredException())
+                return mediaLocalKey
+            }
+
+            val credentials = common.auth.settings?.credentials
+            if (credentials == null) {
+                callback.onError(mediaLocalKey, TruvideoSdkException("Credentials not found"))
+                return mediaLocalKey
+            }
+
+            ioScope.launch {
+                uploadService.resume(
+                    context = context,
                     bucketName = credentials.bucketName,
                     region = credentials.region,
                     poolId = credentials.identityPoolID,
@@ -178,6 +220,49 @@ internal object TruvideoSdkMediaImpl : TruvideoSdkMedia {
         ioScope.launch {
             try {
                 cancel(context, id)
+                callback.onReady(id)
+            } catch (ex: Exception) {
+                ex.printStackTrace()
+
+                if (ex is TruvideoSdkException) {
+                    callback.onError(id, ex)
+                } else {
+                    callback.onError(id, TruvideoSdkException("Unknown error"))
+                }
+            }
+        }
+    }
+
+    override suspend fun pause(context: Context, id: String) {
+        try {
+            val isAuthenticated = common.auth.isAuthenticated
+            if (!isAuthenticated) {
+                throw TruvideoSdkAuthenticationRequiredException()
+            }
+
+            val credentials = common.auth.settings?.credentials
+                ?: throw TruvideoSdkException("Credentials not found")
+            val poolId: String = credentials.identityPoolID
+            val region: String = credentials.region
+
+            uploadService.pause(context = context, region = region, poolId = poolId, id = id)
+        } catch (ex: Exception) {
+            ex.printStackTrace()
+
+            if (ex is TruvideoSdkException) {
+                throw ex
+            } else {
+                throw TruvideoSdkException("Unknown error")
+            }
+        }
+    }
+
+    override fun pause(
+        context: Context, id: String, callback: TruvideoSdkPauseCallback
+    ) {
+        ioScope.launch {
+            try {
+                pause(context, id)
                 callback.onReady(id)
             } catch (ex: Exception) {
                 ex.printStackTrace()

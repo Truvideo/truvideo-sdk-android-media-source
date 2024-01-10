@@ -18,7 +18,7 @@ import com.amazonaws.services.s3.model.CannedAccessControlList
 import com.truvideo.sdk.media.interfaces.TruvideoSdkUploadCallback
 import com.truvideo.sdk.media.model.MediaEntity
 import com.truvideo.sdk.media.model.MediaEntityStatus
-import com.truvideo.sdk.media.repository.MediaRepository
+import com.truvideo.sdk.media.repository.MediaRepositoryImpl
 import com.truvideo.sdk.media.service.media.TruvideoSdkMediaService
 import com.truvideo.sdk.media.util.FileUriUtil
 import io.ktor.util.toUpperCasePreservingASCIIRules
@@ -39,7 +39,7 @@ internal class TruvideoSdkUploadServiceImpl(
     private var ioScope = CoroutineScope(Dispatchers.IO)
     private var mainScope = CoroutineScope(Dispatchers.Main)
     private val common = TruvideoSdk.instance
-    private val mediaRepository = MediaRepository()
+    private val mediaRepositoryImpl = MediaRepositoryImpl()
 
     override suspend fun upload(
         context: Context,
@@ -110,13 +110,137 @@ internal class TruvideoSdkUploadServiceImpl(
             return
         }
 
-        mediaRepository.insertMedia(context, MediaEntity(id, status = MediaEntityStatus.IDLE))
+        mediaRepositoryImpl.insertMedia(
+            context, MediaEntity(id, status = MediaEntityStatus.IDLE, uri = file)
+        )
 
         val transferObserver = transferUtility.upload(
             bucketName, awsPath, fileToUpload, acl
         )
 
-        transferObserver.setTransferListener(object : TransferListener {
+        transferObserver.setTransferListener(
+            buildTransferListener(
+                fileToUpload, client, bucketName, awsPath, context, file, fileName, id, callback
+            )
+        )
+
+        // Store the external media id
+        val externalId = transferObserver.id
+
+        val media = mediaRepositoryImpl.getMediaById(context, id)
+        media.externalId = externalId
+        media.status = MediaEntityStatus.PROCESSING
+        mediaRepositoryImpl.update(context, media)
+    }
+
+    override suspend fun resume(
+        context: Context,
+        bucketName: String,
+        region: String,
+        poolId: String,
+        folder: String,
+        id: String,
+        callback: TruvideoSdkUploadCallback
+    ) {
+        val media = mediaRepositoryImpl.getMediaById(context, id)
+        val file = media.uri
+
+        var externalId = media.externalId
+
+        if (externalId == null) {
+            callback.onError(id, TruvideoSdkException("Invalid external id"))
+            return
+        }
+        //TODO GET INFO FROM DATABASE
+        if (!FileUriUtil.isPhotoOrVideo(context, file)) {
+            callback.onError(id, TruvideoSdkException("Invalid file type"))
+            return
+        }
+
+        // Calculate file name
+        val fileName: String
+        try {
+            val fileExtension = FileUriUtil.getExtension(context, file)
+            fileName = "${UUID.randomUUID()}.$fileExtension"
+        } catch (ex: Exception) {
+            //TODO: remove this to avoid expose internal errors to the final user
+            ex.printStackTrace()
+
+            if (ex is TruvideoSdkException) {
+                callback.onError(id, ex)
+            } else {
+                callback.onError(id, TruvideoSdkException("Invalid uri"))
+            }
+            return
+        }
+
+        val client = getClient(region, poolId)
+        val transferUtility = getTransferUtility(context, client)
+
+        val awsPath = if (folder.isNotEmpty()) {
+            "${folder}/$fileName"
+        } else {
+            fileName
+        }
+
+        // Generate temp file
+        val fileToUpload: File
+        try {
+            fileToUpload = FileUriUtil.createTempFile(context, file, fileName)
+        } catch (ex: Exception) {
+            //TODO: remove this to avoid expose internal errors to the final user
+            ex.printStackTrace()
+
+            if (ex is TruvideoSdkException) {
+                callback.onError(id, ex)
+            } else {
+                callback.onError(id, TruvideoSdkException("File not found"))
+            }
+            return
+        }
+
+        val acl = CannedAccessControlList.PublicRead
+
+        val isOnline = common.connectivity.isOnline()
+        if (!isOnline) {
+            mainScope.launch {
+                callback.onError(
+                    id, TruvideoSdkConnectivityRequiredException()
+                )
+            }
+            return
+        }
+
+        val transferObserver = transferUtility.resume(
+            externalId
+        )
+
+        transferObserver.setTransferListener(
+            buildTransferListener(
+                fileToUpload, client, bucketName, awsPath, context, file, fileName, id, callback
+            )
+        )
+
+        // Store the external media id
+        externalId = transferObserver.id
+
+        media.externalId = externalId
+        media.status = MediaEntityStatus.PROCESSING
+        mediaRepositoryImpl.update(context, media)
+    }
+
+    private fun buildTransferListener(
+        fileToUpload: File,
+        client: AmazonS3Client,
+        bucketName: String,
+        awsPath: String,
+        context: Context,
+        file: Uri,
+        fileName: String,
+        id: String,
+        callback: TruvideoSdkUploadCallback
+    ): TransferListener {
+        return object : TransferListener {
             var size = 0L
 
             override fun onStateChanged(s3Id: Int, state: TransferState) {
@@ -133,14 +257,15 @@ internal class TruvideoSdkUploadServiceImpl(
                                 title = fileName, url = url, size = size, type = type
                             )
 
+                            mediaRepositoryImpl.updateToCompletedStatus(context, id, mediaURL)
+
                             mainScope.launch {
                                 callback.onComplete(
                                     id, mediaURL
                                 )
                             }
-                            mediaRepository.updateToCompletedStatus(context, id)
                         } catch (ex: Exception) {
-                            mediaRepository.updateToErrorStatus(context, id, ex.message)
+                            mediaRepositoryImpl.updateToErrorStatus(context, id, ex.message)
                             //TODO: remove this to avoid expose internal errors to the final user
                             ex.printStackTrace()
 
@@ -166,7 +291,7 @@ internal class TruvideoSdkUploadServiceImpl(
                 size = bytesTotal
                 val progress = (bytesCurrent * 100 / bytesTotal).toInt()
                 ioScope.launch {
-                    mediaRepository.updateProgress(context, id, progress)
+                    mediaRepositoryImpl.updateProgress(context, id, progress)
                 }
                 mainScope.launch {
                     callback.onProgressChanged(id, progress)
@@ -175,7 +300,7 @@ internal class TruvideoSdkUploadServiceImpl(
 
             override fun onError(s3Id: Int, ex: Exception) {
                 ioScope.launch {
-                    mediaRepository.updateToErrorStatus(context, id, ex.message)
+                    mediaRepositoryImpl.updateToErrorStatus(context, id, ex.message)
                 }
                 tryDeleteFile(fileToUpload)
 
@@ -188,43 +313,35 @@ internal class TruvideoSdkUploadServiceImpl(
                     )
                 }
             }
-        })
-
-        // Store the external media id
-        val externalId = transferObserver.id
-
-        val media = mediaRepository.getMediaById(context, id)
-        media.externalId = externalId
-        media.status = MediaEntityStatus.PROCESSING
-        mediaRepository.update(context, media)
+        }
     }
 
     override suspend fun getAllUploadRequests(
         context: Context
     ): List<MediaEntity> {
-        return mediaRepository.getAllUploadRequests(context)
+        return mediaRepositoryImpl.getAllUploadRequests(context)
     }
 
     override suspend fun getAllUploadRequestsByStatus(
         context: Context, status: MediaEntityStatus
     ): List<MediaEntity> {
-        return mediaRepository.getAllUploadRequestsByStatus(context, status)
+        return mediaRepositoryImpl.getAllUploadRequestsByStatus(context, status)
     }
 
     override suspend fun streamMediaById(
         context: Context, id: String
     ): LiveData<MediaEntity> {
-        return mediaRepository.streamMediaById(context, id)
+        return mediaRepositoryImpl.streamMediaById(context, id)
     }
 
     override suspend fun streamAllUploadRequests(context: Context): LiveData<List<MediaEntity>> {
-        return mediaRepository.streamAllUploadRequests(context)
+        return mediaRepositoryImpl.streamAllUploadRequests(context)
     }
 
     override suspend fun streamAllUploadRequestsByStatus(
         context: Context, status: MediaEntityStatus
     ): LiveData<List<MediaEntity>> {
-        return mediaRepository.streamAllUploadRequestsByStatus(context, status)
+        return mediaRepositoryImpl.streamAllUploadRequestsByStatus(context, status)
     }
 
     override suspend fun cancel(
@@ -233,7 +350,7 @@ internal class TruvideoSdkUploadServiceImpl(
         region: String,
         poolId: String,
     ) {
-        val s3Id = mediaRepository.getExternalId(context, id) ?: -1
+        val s3Id = mediaRepositoryImpl.getExternalId(context, id) ?: -1
         if (s3Id == -1) {
             throw TruvideoSdkException("Upload request not found")
         }
@@ -241,6 +358,7 @@ internal class TruvideoSdkUploadServiceImpl(
         val client = getClient(region = region, poolId = poolId)
         val transferUtility = getTransferUtility(context, client)
         transferUtility.cancel(s3Id)
+        mediaRepositoryImpl.updateToCanceledStatus(context, id)
     }
 
     override suspend fun pause(
@@ -249,7 +367,7 @@ internal class TruvideoSdkUploadServiceImpl(
         region: String,
         poolId: String,
     ) {
-        val s3Id = mediaRepository.getExternalId(context, id) ?: -1
+        val s3Id = mediaRepositoryImpl.getExternalId(context, id) ?: -1
         if (s3Id == -1) {
             throw TruvideoSdkException("Upload request not found")
         }
@@ -257,38 +375,7 @@ internal class TruvideoSdkUploadServiceImpl(
         val client = getClient(region = region, poolId = poolId)
         val transferUtility = getTransferUtility(context, client)
         transferUtility.pause(s3Id)
-    }
-
-    override suspend fun resume(
-        context: Context,
-        id: String,
-        region: String,
-        poolId: String,
-    ) {
-        val s3Id = mediaRepository.getExternalId(context, id) ?: -1
-        if (s3Id == -1) {
-            throw TruvideoSdkException("Upload request not found")
-        }
-
-        val client = getClient(region = region, poolId = poolId)
-        val transferUtility = getTransferUtility(context, client)
-        transferUtility.resume(s3Id)
-    }
-
-    override suspend fun getState(
-        context: Context, region: String, poolId: String, id: String
-    ): String {
-        val client = getClient(region, poolId)
-        val transferUtility = getTransferUtility(context, client)
-
-        val s3Id = mediaRepository.getExternalId(context, id) ?: -1
-        if (s3Id == -1) {
-            throw TruvideoSdkException("Upload request not found")
-        }
-
-        val transfer = transferUtility.getTransferById(s3Id)
-            ?: throw TruvideoSdkException("Upload request not found")
-        return transfer.state.name
+        mediaRepositoryImpl.updateToPausedStatus(context, id)
     }
 
     private fun tryDeleteFile(file: File) {

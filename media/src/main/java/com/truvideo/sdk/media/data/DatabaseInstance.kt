@@ -3,7 +3,7 @@ package com.truvideo.sdk.media.data
 import android.content.Context
 import androidx.room.Room
 
-object DatabaseSingleton {
+internal object DatabaseInstance {
     private var instance: AppDatabase? = null
 
     fun getDatabase(context: Context): AppDatabase {

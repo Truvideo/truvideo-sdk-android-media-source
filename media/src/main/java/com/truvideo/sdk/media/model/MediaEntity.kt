@@ -1,9 +1,10 @@
 package com.truvideo.sdk.media.model
 
+import android.net.Uri
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
-import com.truvideo.sdk.media.data.Converters
+import com.truvideo.sdk.media.data.DatabaseConverters
 import java.util.Date
 
 @Entity
@@ -12,11 +13,13 @@ data class MediaEntity(
     var externalId: Int? = null,
     var progress: Int? = null,
     var errorMessage: String? = null,
-    @TypeConverters(Converters::class) var status: MediaEntityStatus,
-    @TypeConverters(Converters::class) val createdAt: Date = Date(),
-    @TypeConverters(Converters::class) var updatedAt: Date = Date()
+    var mediaURL: String? = null,
+    @TypeConverters(DatabaseConverters::class) var uri: Uri,
+    @TypeConverters(DatabaseConverters::class) var status: MediaEntityStatus,
+    @TypeConverters(DatabaseConverters::class) val createdAt: Date = Date(),
+    @TypeConverters(DatabaseConverters::class) var updatedAt: Date = Date()
 )
 
 enum class MediaEntityStatus {
-    IDLE, PROCESSING, ERROR, COMPLETED
+    IDLE, PROCESSING, ERROR, COMPLETED, PAUSED, CANCELED
 }

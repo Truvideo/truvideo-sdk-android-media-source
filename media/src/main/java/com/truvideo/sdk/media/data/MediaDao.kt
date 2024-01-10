@@ -10,7 +10,7 @@ import com.truvideo.sdk.media.model.MediaEntity
 import com.truvideo.sdk.media.model.MediaEntityStatus
 
 @Dao
-interface MediaDao {
+internal interface MediaDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertMedia(media: MediaEntity)
 
