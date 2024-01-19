@@ -12,6 +12,16 @@ import com.truvideo.sdk.media.model.MediaEntityStatus
 interface TruvideoSdkMedia {
 
     /**
+     * Initializes the Truvideo SDK with the provided context and authentication callback.
+     *
+     * This method must be called before any other media-related operations.
+     *
+     * @param context The Android application context.
+     * @param callback The callback for handling authentication status.
+     */
+    fun init(context: Context, callback: TruvideoSdkAuthCallback)
+
+    /**
      * Initiates the upload of a file to a remote server.
      *
      * This method begins the process of uploading a file to a remote server. It generates
@@ -40,6 +50,23 @@ interface TruvideoSdkMedia {
      * @see TruvideoSdkUploadCallback
      */
     fun resume(
+        context: Context, mediaLocalKey: String, callback: TruvideoSdkUploadCallback
+    ): String
+
+    /**
+     * Initiates the retry of a previously interrupted upload operation to a remote server.
+     *
+     * <p>This method begins the process of retrying a previously interrupted file upload to a remote server.
+     * It generates a unique key for the upload operation and checks the authentication status before proceeding.</p>
+     *
+     * @param context The Android application context.
+     * @param mediaLocalKey The unique key associated with the original upload process to be retried.
+     * @param callback The listener to handle transfer progress and errors during the retry.
+     * @return A unique key associated with the retry process, which can be used for tracking and error handling.
+     *
+     * @see TruvideoSdkUploadCallback
+     */
+    fun retry(
         context: Context, mediaLocalKey: String, callback: TruvideoSdkUploadCallback
     ): String
 

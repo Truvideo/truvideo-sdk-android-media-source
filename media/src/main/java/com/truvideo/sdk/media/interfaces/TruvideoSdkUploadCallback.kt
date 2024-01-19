@@ -6,7 +6,7 @@ import truvideo.sdk.common.exception.TruvideoSdkException
 /**
  * Interface for receiving transfer-related events during file upload.
  */
-interface TruvideoSdkUploadCallback {
+interface TruvideoSdkUploadCallback : TruvideoSdkAuthCallback {
 
     /**
      * Called when a file transfer operation is completed successfully.

@@ -32,6 +32,7 @@ import java.io.File
 import java.util.UUID
 import kotlin.coroutines.suspendCoroutine
 
+
 internal class TruvideoSdkUploadServiceImpl(
     val mediaService: TruvideoSdkMediaService
 ) : TruvideoSdkUploadServiceInterface {
@@ -40,6 +41,17 @@ internal class TruvideoSdkUploadServiceImpl(
     private var mainScope = CoroutineScope(Dispatchers.Main)
     private val common = TruvideoSdk.instance
     private val mediaRepositoryImpl = MediaRepositoryImpl()
+
+    override suspend fun init(
+        context: Context,
+        region: String,
+        poolId: String,
+    ) {
+        mediaRepositoryImpl.getAllUploadRequestsByStatus(context, MediaEntityStatus.PROCESSING)
+            .map { mediaEntity ->
+                mediaEntity.externalId?.let { cancel(context, mediaEntity.id, it, region, poolId) }
+            }
+    }
 
     override suspend fun upload(
         context: Context,
@@ -133,6 +145,30 @@ internal class TruvideoSdkUploadServiceImpl(
         mediaRepositoryImpl.update(context, media)
     }
 
+    override suspend fun retry(
+        context: Context,
+        bucketName: String,
+        region: String,
+        poolId: String,
+        folder: String,
+        id: String,
+        callback: TruvideoSdkUploadCallback
+    ) {
+        val media = mediaRepositoryImpl.getMediaById(context, id)
+
+        if (media.status == MediaEntityStatus.COMPLETED) {
+            callback.onError(id, TruvideoSdkException("Media already uploaded"))
+            return
+        }
+
+        if (media.status == MediaEntityStatus.PROCESSING) {
+            callback.onError(id, TruvideoSdkException("Processing media"))
+            return
+        }
+
+        resumeOrRetryUpload(context, media, callback, id, region, poolId, folder, bucketName)
+    }
+
     override suspend fun resume(
         context: Context,
         bucketName: String,
@@ -143,6 +179,25 @@ internal class TruvideoSdkUploadServiceImpl(
         callback: TruvideoSdkUploadCallback
     ) {
         val media = mediaRepositoryImpl.getMediaById(context, id)
+
+        if (media.status != MediaEntityStatus.PAUSED) {
+            callback.onError(id, TruvideoSdkException("Media can't be resumed"))
+            return
+        }
+
+        resumeOrRetryUpload(context, media, callback, id, region, poolId, folder, bucketName)
+    }
+
+    private suspend fun resumeOrRetryUpload(
+        context: Context,
+        media: MediaEntity,
+        callback: TruvideoSdkUploadCallback,
+        id: String,
+        region: String,
+        poolId: String,
+        folder: String,
+        bucketName: String
+    ) {
         val file = media.uri
 
         var externalId = media.externalId
@@ -151,11 +206,12 @@ internal class TruvideoSdkUploadServiceImpl(
             callback.onError(id, TruvideoSdkException("Invalid external id"))
             return
         }
-        //TODO GET INFO FROM DATABASE
+
         if (!FileUriUtil.isPhotoOrVideo(context, file)) {
             callback.onError(id, TruvideoSdkException("Invalid file type"))
             return
         }
+
 
         // Calculate file name
         val fileName: String
@@ -354,7 +410,16 @@ internal class TruvideoSdkUploadServiceImpl(
         if (s3Id == -1) {
             throw TruvideoSdkException("Upload request not found")
         }
+        cancel(context, id, s3Id, region, poolId)
+    }
 
+    override suspend fun cancel(
+        context: Context,
+        id: String,
+        s3Id: Int,
+        region: String,
+        poolId: String,
+    ) {
         val client = getClient(region = region, poolId = poolId)
         val transferUtility = getTransferUtility(context, client)
         transferUtility.cancel(s3Id)
@@ -370,6 +435,12 @@ internal class TruvideoSdkUploadServiceImpl(
         val s3Id = mediaRepositoryImpl.getExternalId(context, id) ?: -1
         if (s3Id == -1) {
             throw TruvideoSdkException("Upload request not found")
+        }
+
+        val media = mediaRepositoryImpl.getMediaById(context, id)
+
+        if (media.status != MediaEntityStatus.PROCESSING) {
+            throw TruvideoSdkException("Media can't be paused")
         }
 
         val client = getClient(region = region, poolId = poolId)

@@ -9,6 +9,8 @@ import com.truvideo.sdk.media.model.MediaEntityStatus
 
 internal interface TruvideoSdkUploadServiceInterface {
 
+    suspend fun init(context: Context, region: String, poolId: String)
+
     suspend fun upload(
         context: Context,
         bucketName: String,
@@ -27,6 +29,8 @@ internal interface TruvideoSdkUploadServiceInterface {
         poolId: String,
     )
 
+    suspend fun cancel(context: Context, id: String, s3Id: Int, region: String, poolId: String)
+
     suspend fun streamAllUploadRequests(context: Context): LiveData<List<MediaEntity>>
     suspend fun streamAllUploadRequestsByStatus(
         context: Context, status: MediaEntityStatus
@@ -39,6 +43,16 @@ internal interface TruvideoSdkUploadServiceInterface {
     suspend fun getAllUploadRequestsByStatus(
         context: Context, status: MediaEntityStatus
     ): List<MediaEntity>
+
+    suspend fun retry(
+        context: Context,
+        bucketName: String,
+        region: String,
+        poolId: String,
+        folder: String,
+        id: String,
+        callback: TruvideoSdkUploadCallback
+    )
 
     suspend fun resume(
         context: Context,
