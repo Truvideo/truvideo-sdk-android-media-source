@@ -18,15 +18,14 @@ internal class MediaRepositoryImpl : MediaRepositoryInterface {
         DatabaseInstance.getDatabase(context).mediaDao().updateMedia(media)
     }
 
+    override fun delete(context: Context, media: MediaEntity) {
+        media.updatedAt = Date()
+        DatabaseInstance.getDatabase(context).mediaDao().deleteMedia(media)
+    }
+
     override fun updateProgress(context: Context, id: String, progress: Int) {
         val media = getMediaById(context, id)
         media.progress = progress
-        update(context, media)
-    }
-
-    override fun updateToIdleStatus(context: Context, id: String) {
-        val media = getMediaById(context, id)
-        media.status = MediaEntityStatus.IDLE
         update(context, media)
     }
 

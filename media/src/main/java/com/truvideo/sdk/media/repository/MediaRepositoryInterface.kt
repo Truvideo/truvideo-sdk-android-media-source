@@ -35,7 +35,7 @@ internal interface MediaRepositoryInterface {
         context: Context, status: MediaEntityStatus
     ): LiveData<List<MediaEntity>>
 
-    fun updateToIdleStatus(context: Context, id: String)
     fun updateToPausedStatus(context: Context, id: String)
     fun updateToCanceledStatus(context: Context, id: String)
+    fun delete(context: Context, media: MediaEntity)
 }

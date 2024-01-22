@@ -117,6 +117,19 @@ interface TruvideoSdkMedia {
     fun pause(context: Context, id: String, callback: TruvideoSdkPauseCallback)
 
     /**
+     * Deletes the file associated with the provided key.
+     *
+     * This method deletes the file associated with a given key, provided that the user is authenticated
+     * and the necessary credentials are available. The deletion is handled through the specified callback.
+     *
+     * @param context The Android application context.
+     * @param id The id associated with the file to be deleted.
+     * @param callback The listener to handle deletion results. The callback will receive a Boolean value indicating
+     *                 whether the deletion was successful (true) or not (false).
+     */
+    fun delete(context: Context, id: String, callback: TruvideoSdkGenericCallback<Boolean>)
+
+    /**
      * Streams a list of all upload requests.
      *
      * This method streams a list of all upload requests to the specified callback.

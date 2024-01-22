@@ -2,6 +2,7 @@ package com.truvideo.sdk.media.data
 
 import androidx.lifecycle.LiveData
 import androidx.room.Dao
+import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
@@ -11,6 +12,10 @@ import com.truvideo.sdk.media.model.MediaEntityStatus
 
 @Dao
 internal interface MediaDao {
+
+    @Delete
+    fun deleteMedia(media: MediaEntity)
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertMedia(media: MediaEntity)
 
@@ -41,9 +46,9 @@ internal interface MediaDao {
     //get all upload requests
     //get upload request where status = X
     //get request by id
-    //TODO delete request
+    //delete request
     //stream all requests
     //stream request where status = X
     //stream request by id
-    //TODO delete all request where status = x
+    //delete all request where status = x
 }

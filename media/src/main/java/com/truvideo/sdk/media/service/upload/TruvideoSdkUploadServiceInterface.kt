@@ -63,4 +63,6 @@ internal interface TruvideoSdkUploadServiceInterface {
         id: String,
         callback: TruvideoSdkUploadCallback
     )
+
+    suspend fun delete(context: Context, id: String, region: String, poolId: String)
 }

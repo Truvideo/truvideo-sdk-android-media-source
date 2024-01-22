@@ -122,10 +122,6 @@ internal class TruvideoSdkUploadServiceImpl(
             return
         }
 
-        mediaRepositoryImpl.insertMedia(
-            context, MediaEntity(id, status = MediaEntityStatus.IDLE, uri = file)
-        )
-
         val transferObserver = transferUtility.upload(
             bucketName, awsPath, fileToUpload, acl
         )
@@ -139,10 +135,11 @@ internal class TruvideoSdkUploadServiceImpl(
         // Store the external media id
         val externalId = transferObserver.id
 
-        val media = mediaRepositoryImpl.getMediaById(context, id)
-        media.externalId = externalId
-        media.status = MediaEntityStatus.PROCESSING
-        mediaRepositoryImpl.update(context, media)
+        mediaRepositoryImpl.insertMedia(
+            context, MediaEntity(
+                id, status = MediaEntityStatus.PROCESSING, uri = file, externalId = externalId
+            )
+        )
     }
 
     override suspend fun retry(
@@ -398,6 +395,22 @@ internal class TruvideoSdkUploadServiceImpl(
         context: Context, status: MediaEntityStatus
     ): LiveData<List<MediaEntity>> {
         return mediaRepositoryImpl.streamAllUploadRequestsByStatus(context, status)
+    }
+
+    override suspend fun delete(
+        context: Context,
+        id: String,
+        region: String,
+        poolId: String,
+    ) {
+        val media = mediaRepositoryImpl.getMediaById(context, id)
+        val s3Id = media.externalId ?: -1
+        if (s3Id != -1) {
+            val client = getClient(region = region, poolId = poolId)
+            val transferUtility = getTransferUtility(context, client)
+            transferUtility.cancel(s3Id)
+        }
+        mediaRepositoryImpl.delete(context, media)
     }
 
     override suspend fun cancel(

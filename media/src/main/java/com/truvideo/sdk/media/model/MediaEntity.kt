@@ -21,5 +21,5 @@ data class MediaEntity(
 )
 
 enum class MediaEntityStatus {
-    IDLE, PROCESSING, ERROR, COMPLETED, PAUSED, CANCELED
+    PROCESSING, ERROR, COMPLETED, PAUSED, CANCELED
 }

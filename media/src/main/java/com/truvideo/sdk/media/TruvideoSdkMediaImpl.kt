@@ -177,6 +177,17 @@ internal object TruvideoSdkMediaImpl : TruvideoSdkMedia {
         }
     }
 
+    override fun delete(
+        context: Context, id: String, callback: TruvideoSdkGenericCallback<Boolean>
+    ) {
+        performAuthenticatedAction(callback) {
+            ioScope.launch {
+                uploadService.delete(context, id, it.region, it.identityPoolID)
+                callback.onComplete(true)
+            }
+        }
+    }
+
     override suspend fun cancel(context: Context, id: String) {
         try {
             val isAuthenticated = common.auth.isAuthenticated
