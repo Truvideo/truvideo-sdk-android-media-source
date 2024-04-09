@@ -2,18 +2,18 @@ package com.truvideo.sdk.media.data
 
 import android.net.Uri
 import androidx.room.TypeConverter
-import com.truvideo.sdk.media.model.MediaEntityStatus
+import com.truvideo.sdk.media.model.TruvideoSdkMediaFileUploadStatus
 import java.util.Date
 
 internal class DatabaseConverters {
     @TypeConverter
-    fun fromStatus(status: MediaEntityStatus): String {
+    fun fromStatus(status: TruvideoSdkMediaFileUploadStatus): String {
         return status.name
     }
 
     @TypeConverter
-    fun toStatus(status: String): MediaEntityStatus {
-        return enumValueOf<MediaEntityStatus>(status)
+    fun toStatus(status: String): TruvideoSdkMediaFileUploadStatus {
+        return enumValueOf<TruvideoSdkMediaFileUploadStatus>(status)
     }
 
     @TypeConverter
@@ -25,15 +25,4 @@ internal class DatabaseConverters {
     fun toDate(date: Date?): Long? {
         return date?.time
     }
-
-    @TypeConverter
-    fun fromUri(uri: Uri): String {
-        return uri.toString()
-    }
-
-    @TypeConverter
-    fun toUri(uriString: String): Uri {
-        return Uri.parse(uriString)
-    }
-
 }

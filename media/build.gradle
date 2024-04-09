@@ -40,17 +40,25 @@ android {
     kotlinOptions {
         jvmTarget = '1.8'
     }
+
+    kapt {
+        arguments {
+            arg("room.schemaLocation", "$projectDir/schemas")
+        }
+    }
 }
 
 dependencies {
+    implementation "androidx.startup:startup-runtime:1.1.1"
+
     implementation 'androidx.core:core-ktx:1.12.0'
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'com.google.android.material:material:1.11.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     implementation 'androidx.fragment:fragment-ktx:1.6.2'
     implementation 'androidx.lifecycle:lifecycle-extensions:2.2.0'
-    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.6.2'
-    implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.6.2'
+    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.7.0'
+    implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.7.0'
 
     // S3
     implementation 'com.amazonaws:aws-android-sdk-mobile-client:2.16.6'
@@ -78,14 +86,14 @@ dependencies {
 
     // Common
     var commonVersion = properties.getProperty("commonVersion")
-    implementation("com.github.Truvideo:truvideo-sdk-android-common:$commonVersion")
+    implementation("com.github.truvideo:truvideo-sdk-android-common:$commonVersion")
 
     var ktorVersion = "2.3.2"
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
     implementation("io.ktor:ktor-client-core:$ktorVersion")
     implementation("io.ktor:ktor-client-logging:$ktorVersion")
     implementation("io.ktor:ktor-client-okhttp:$ktorVersion")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
     implementation("com.russhwolf:multiplatform-settings:1.0.0")
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.1")
     implementation("co.touchlab:kermit:2.0.0-RC5")

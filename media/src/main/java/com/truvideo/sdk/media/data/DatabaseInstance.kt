@@ -1,6 +1,7 @@
 package com.truvideo.sdk.media.data
 
 import android.content.Context
+import androidx.room.AutoMigration
 import androidx.room.Room
 
 internal object DatabaseInstance {
@@ -13,6 +14,10 @@ internal object DatabaseInstance {
     }
 
     private fun buildDatabase(context: Context): AppDatabase {
-        return Room.databaseBuilder(context, AppDatabase::class.java, "app-database").build()
+        return Room
+            .databaseBuilder(context, AppDatabase::class.java, "app-database")
+            .fallbackToDestructiveMigration()
+            .fallbackToDestructiveMigrationOnDowngrade()
+            .build()
     }
 }

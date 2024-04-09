@@ -1,303 +1,136 @@
 package com.truvideo.sdk.media
 
-import android.content.Context
-import android.net.Uri
 import androidx.lifecycle.LiveData
-import com.truvideo.sdk.media.interfaces.TruvideoSdkAuthCallback
-import com.truvideo.sdk.media.interfaces.TruvideoSdkCancelCallback
+import androidx.lifecycle.map
+import com.truvideo.sdk.media.builder.TruvideoSdkMediaFileUploadRequestBuilder
+import com.truvideo.sdk.media.engines.TruvideoSdkMediaFileUploadEngine
 import com.truvideo.sdk.media.interfaces.TruvideoSdkGenericCallback
 import com.truvideo.sdk.media.interfaces.TruvideoSdkMedia
-import com.truvideo.sdk.media.interfaces.TruvideoSdkPauseCallback
-import com.truvideo.sdk.media.interfaces.TruvideoSdkUploadCallback
-import com.truvideo.sdk.media.model.MediaEntity
-import com.truvideo.sdk.media.model.MediaEntityStatus
-import com.truvideo.sdk.media.service.media.TruvideoSdkMediaService
-import com.truvideo.sdk.media.service.upload.TruvideoSdkUploadServiceImpl
+import com.truvideo.sdk.media.interfaces.TruvideoSdkVideoAuthAdapter
+import com.truvideo.sdk.media.model.TruvideoSdkMediaFileUploadRequest
+import com.truvideo.sdk.media.model.TruvideoSdkMediaFileUploadStatus
+import com.truvideo.sdk.media.repository.TruvideoSdkMediaFileUploadRequestRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import truvideo.sdk.common.TruvideoSdk
-import truvideo.sdk.common.exception.TruvideoSdkAuthenticationRequiredException
 import truvideo.sdk.common.exception.TruvideoSdkException
-import truvideo.sdk.common.model.TruvideoSdkStorageCredentials
-import java.util.UUID
 
+internal class TruvideoSdkMediaImpl(
+    private val authAdapter: TruvideoSdkVideoAuthAdapter,
+    private val mediaFileUploadRequestRepository: TruvideoSdkMediaFileUploadRequestRepository,
+    private val fileUploadEngine: TruvideoSdkMediaFileUploadEngine,
+) : TruvideoSdkMedia {
 
-internal object TruvideoSdkMediaImpl : TruvideoSdkMedia {
+    private var scope = CoroutineScope(Dispatchers.IO)
 
-    private val uploadService = TruvideoSdkUploadServiceImpl(
-        mediaService = TruvideoSdkMediaService(),
-    )
-
-    private val common = TruvideoSdk.instance
-    private var ioScope = CoroutineScope(Dispatchers.IO)
-
-    override fun init(context: Context, callback: TruvideoSdkAuthCallback) {
-        performAuthenticatedAction(callback) {
-            ioScope.launch {
-                uploadService.init(context, it.region, it.identityPoolID)
-            }
-        }
+    init {
+        scope.launch { mediaFileUploadRequestRepository.cancelAllProcessing() }
     }
 
-    override fun upload(
-        context: Context, file: Uri, callback: TruvideoSdkUploadCallback
-    ): String {
-        val mediaLocalKey = UUID.randomUUID().toString()
+    override fun FileUploadRequestBuilder(filePath: String): TruvideoSdkMediaFileUploadRequestBuilder {
+        authAdapter.validateAuthentication()
 
-        performAuthenticatedAction(callback) { credentials ->
-            ioScope.launch {
-                uploadService.upload(
-                    context = context,
-                    file = file,
-                    bucketName = credentials.bucketName,
-                    region = credentials.region,
-                    poolId = credentials.identityPoolID,
-                    folder = credentials.bucketFolderMedia,
-                    id = mediaLocalKey,
-                    callback = callback
-                )
-            }
-        }
-
-        return mediaLocalKey
+        return TruvideoSdkMediaFileUploadRequestBuilder(
+            filePath = filePath,
+            mediaRepository = mediaFileUploadRequestRepository,
+            engine = fileUploadEngine
+        )
     }
 
-    override fun retry(
-        context: Context, mediaLocalKey: String, callback: TruvideoSdkUploadCallback
-    ): String {
-        performAuthenticatedAction(callback) { credentials ->
-            ioScope.launch {
-                uploadService.retry(
-                    context = context,
-                    bucketName = credentials.bucketName,
-                    region = credentials.region,
-                    poolId = credentials.identityPoolID,
-                    folder = credentials.bucketFolderMedia,
-                    id = mediaLocalKey,
-                    callback = callback
-                )
-            }
-        }
-
-        return mediaLocalKey
-    }
-
-    override fun resume(
-        context: Context, mediaLocalKey: String, callback: TruvideoSdkUploadCallback
-    ): String {
-        performAuthenticatedAction(callback) { credentials ->
-            ioScope.launch {
-                uploadService.resume(
-                    context = context,
-                    bucketName = credentials.bucketName,
-                    region = credentials.region,
-                    poolId = credentials.identityPoolID,
-                    folder = credentials.bucketFolderMedia,
-                    id = mediaLocalKey,
-                    callback = callback
-                )
-            }
-        }
-
-        return mediaLocalKey
-    }
-
-    override fun streamAllUploadRequests(
-        context: Context, callback: TruvideoSdkGenericCallback<LiveData<List<MediaEntity>>>
+    override fun streamAllFileUploadRequests(
+        status: TruvideoSdkMediaFileUploadStatus?,
+        callback: TruvideoSdkGenericCallback<LiveData<List<TruvideoSdkMediaFileUploadRequest>>>
     ) {
-        performAuthenticatedAction(callback) {
-            ioScope.launch {
-                callback.onComplete(
-                    uploadService.streamAllUploadRequests(
-                        context = context,
-                    )
-                )
-            }
-        }
-    }
-
-    override fun getAllUploadRequests(
-        context: Context, callback: TruvideoSdkGenericCallback<List<MediaEntity>>
-    ) {
-        performAuthenticatedAction(callback) {
-            ioScope.launch {
-                callback.onComplete(
-                    uploadService.getAllUploadRequests(
-                        context = context
-                    )
-                )
-            }
-        }
-    }
-
-    override fun getAllUploadRequestsByStatus(
-        context: Context,
-        status: MediaEntityStatus,
-        callback: TruvideoSdkGenericCallback<List<MediaEntity>>
-    ) {
-        performAuthenticatedAction(callback) {
-            ioScope.launch {
-                callback.onComplete(
-                    uploadService.getAllUploadRequestsByStatus(
-                        context = context, status = status
-                    )
-                )
-            }
-        }
-    }
-
-    override fun streamMediaById(
-        context: Context, id: String, callback: TruvideoSdkGenericCallback<LiveData<MediaEntity>>
-    ) {
-        performAuthenticatedAction(callback) {
-            ioScope.launch {
-                callback.onComplete(
-                    uploadService.streamMediaById(
-                        context = context, id = id
-                    )
-                )
-            }
-        }
-    }
-
-    override fun streamAllUploadRequestsByStatus(
-        context: Context,
-        status: MediaEntityStatus,
-        callback: TruvideoSdkGenericCallback<LiveData<List<MediaEntity>>>
-    ) {
-        performAuthenticatedAction(callback) {
-            ioScope.launch {
-                callback.onComplete(
-                    uploadService.streamAllUploadRequestsByStatus(
-                        context = context, status = status
-                    )
-                )
-            }
-        }
-    }
-
-    override fun delete(
-        context: Context, id: String, callback: TruvideoSdkGenericCallback<Boolean>
-    ) {
-        performAuthenticatedAction(callback) {
-            ioScope.launch {
-                uploadService.delete(context, id, it.region, it.identityPoolID)
-                callback.onComplete(true)
-            }
-        }
-    }
-
-    override suspend fun cancel(context: Context, id: String) {
-        try {
-            val isAuthenticated = common.auth.isAuthenticated
-            if (!isAuthenticated) {
-                throw TruvideoSdkAuthenticationRequiredException()
-            }
-
-            val credentials = common.auth.settings?.credentials
-                ?: throw TruvideoSdkException("Credentials not found")
-            val poolId: String = credentials.identityPoolID
-            val region: String = credentials.region
-
-            uploadService.cancel(context = context, region = region, poolId = poolId, id = id)
-        } catch (ex: Exception) {
-            ex.printStackTrace()
-
-            if (ex is TruvideoSdkException) {
-                throw ex
-            } else {
-                throw TruvideoSdkException("Unknown error")
-            }
-        }
-    }
-
-    override fun cancel(
-        context: Context, id: String, callback: TruvideoSdkCancelCallback
-    ) {
-        ioScope.launch {
+        scope.launch {
             try {
-                cancel(context, id)
-                callback.onReady(id)
-            } catch (ex: Exception) {
-                ex.printStackTrace()
+                val data = streamAllFileUploadRequests(status)
+                callback.onComplete(data)
+            } catch (exception: Exception) {
+                exception.printStackTrace()
 
-                if (ex is TruvideoSdkException) {
-                    callback.onError(id, ex)
+                val externalException = if (exception is TruvideoSdkException) {
+                    exception
                 } else {
-                    callback.onError(id, TruvideoSdkException("Unknown error"))
+                    TruvideoSdkException("Unknown exception")
                 }
+                callback.onError(externalException)
             }
         }
     }
 
-    override suspend fun pause(context: Context, id: String) {
-        try {
-            val isAuthenticated = common.auth.isAuthenticated
-            if (!isAuthenticated) {
-                throw TruvideoSdkAuthenticationRequiredException()
-            }
+    override suspend fun streamAllFileUploadRequests(
+        status: TruvideoSdkMediaFileUploadStatus?
+    ): LiveData<List<TruvideoSdkMediaFileUploadRequest>> {
+        authAdapter.validateAuthentication()
 
-            val credentials = common.auth.settings?.credentials
-                ?: throw TruvideoSdkException("Credentials not found")
-            val poolId: String = credentials.identityPoolID
-            val region: String = credentials.region
-
-            uploadService.pause(context = context, region = region, poolId = poolId, id = id)
-        } catch (ex: Exception) {
-            ex.printStackTrace()
-
-            if (ex is TruvideoSdkException) {
-                throw ex
-            } else {
-                throw TruvideoSdkException("Unknown error")
+        val stream = mediaFileUploadRequestRepository.streamAll(status)
+        return stream.map { list ->
+            list.onEach { item ->
+                item.engine = fileUploadEngine
             }
         }
     }
 
-    override fun pause(
-        context: Context, id: String, callback: TruvideoSdkPauseCallback
+    override fun streamFileUploadRequestById(
+        id: String,
+        callback: TruvideoSdkGenericCallback<LiveData<TruvideoSdkMediaFileUploadRequest?>>
     ) {
-        ioScope.launch {
+        scope.launch {
             try {
-                pause(context, id)
-                callback.onReady(id)
-            } catch (ex: Exception) {
-                ex.printStackTrace()
+                val data = streamFileUploadRequestById(id)
+                callback.onComplete(data)
+            } catch (exception: Exception) {
+                exception.printStackTrace()
 
-                if (ex is TruvideoSdkException) {
-                    callback.onError(id, ex)
+                val externalException = if (exception is TruvideoSdkException) {
+                    exception
                 } else {
-                    callback.onError(id, TruvideoSdkException("Unknown error"))
+                    TruvideoSdkException("Unknown exception")
                 }
+                callback.onError(externalException)
             }
         }
     }
 
-    private fun <T : TruvideoSdkAuthCallback> performAuthenticatedAction(
-        callback: T, action: (credentials: TruvideoSdkStorageCredentials) -> Unit
+    override suspend fun streamFileUploadRequestById(id: String): LiveData<TruvideoSdkMediaFileUploadRequest?> {
+        authAdapter.validateAuthentication()
+
+        val stream = mediaFileUploadRequestRepository.streamById(id)
+        return stream.map {
+            it?.apply {
+                engine = fileUploadEngine
+            }
+        }
+
+    }
+
+    override fun getAllFileUploadRequests(
+        status: TruvideoSdkMediaFileUploadStatus?,
+        callback: TruvideoSdkGenericCallback<List<TruvideoSdkMediaFileUploadRequest>>
     ) {
-        try {
-            val isAuthenticated = common.auth.isAuthenticated
-            if (!isAuthenticated) {
-                callback.onAuthError(TruvideoSdkAuthenticationRequiredException())
-                return
-            }
+        scope.launch {
+            try {
+                val data = getAllFileUploadRequests(status)
+                callback.onComplete(data)
+            } catch (exception: Exception) {
+                exception.printStackTrace()
 
-            val credentials = common.auth.settings?.credentials
-            if (credentials == null) {
-                callback.onAuthError(TruvideoSdkException("Credentials not found"))
-                return
-            }
-            action.invoke(credentials)
-        } catch (ex: Exception) {
-            ex.printStackTrace()
-
-            if (ex is TruvideoSdkException) {
-                throw ex
-            } else {
-                throw TruvideoSdkException("Unknown error")
+                val externalException = if (exception is TruvideoSdkException) {
+                    exception
+                } else {
+                    TruvideoSdkException("Unknown exception")
+                }
+                callback.onError(externalException)
             }
         }
     }
+
+    override suspend fun getAllFileUploadRequests(status: TruvideoSdkMediaFileUploadStatus?): List<TruvideoSdkMediaFileUploadRequest> {
+        authAdapter.validateAuthentication()
+
+        val items = mediaFileUploadRequestRepository.getAll(status)
+        items.forEach { it.engine = fileUploadEngine }
+        return items
+    }
+
 }

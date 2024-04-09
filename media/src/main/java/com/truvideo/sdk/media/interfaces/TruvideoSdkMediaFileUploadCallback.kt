@@ -6,7 +6,7 @@ import truvideo.sdk.common.exception.TruvideoSdkException
 /**
  * Interface for receiving transfer-related events during file upload.
  */
-interface TruvideoSdkUploadCallback : TruvideoSdkAuthCallback {
+interface TruvideoSdkMediaFileUploadCallback {
 
     /**
      * Called when a file transfer operation is completed successfully.
@@ -22,7 +22,7 @@ interface TruvideoSdkUploadCallback : TruvideoSdkAuthCallback {
      * @param id The unique key associated with the ongoing transfer operation.
      * @param progress The current progress of the transfer operation as a percentage.
      */
-    fun onProgressChanged(id: String, progress: Int)
+    fun onProgressChanged(id: String, progress: Float)
 
     /**
      * Called when an error occurs during a file transfer operation.

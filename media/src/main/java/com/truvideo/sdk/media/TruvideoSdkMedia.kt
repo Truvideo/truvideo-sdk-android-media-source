@@ -5,4 +5,4 @@ package com.truvideo.sdk.media
 import com.truvideo.sdk.media.interfaces.TruvideoSdkMedia
 
 @get:JvmName("getInstance")
-val TruvideoSdkMedia: TruvideoSdkMedia = TruvideoSdkMediaImpl
+lateinit var TruvideoSdkMedia: TruvideoSdkMedia
