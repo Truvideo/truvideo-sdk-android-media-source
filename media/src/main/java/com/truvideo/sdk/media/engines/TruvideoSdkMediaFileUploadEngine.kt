@@ -9,7 +9,6 @@ import com.truvideo.sdk.media.repository.TruvideoSdkMediaFileUploadRequestReposi
 import com.truvideo.sdk.media.service.media.TruvideoSdkMediaServiceImpl
 import com.truvideo.sdk.media.usecases.UploadFileUseCase
 import com.truvideo.sdk.media.util.FileUriUtil
-import io.ktor.util.toUpperCasePreservingASCIIRules
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -18,6 +17,7 @@ import kotlinx.coroutines.sync.withLock
 import truvideo.sdk.common.TruvideoSdk
 import truvideo.sdk.common.exception.TruvideoSdkException
 import java.io.File
+import java.util.Locale
 
 internal class TruvideoSdkMediaFileUploadEngine(
     private val context: Context,
@@ -123,7 +123,7 @@ internal class TruvideoSdkMediaFileUploadEngine(
                                     // Create truvideo entity
                                     val file = File(entity.filePath)
                                     val mimeType = FileUriUtil.getMimeType(context, Uri.fromFile(file))
-                                    val type = mimeType.split("/")[0].toUpperCasePreservingASCIIRules()
+                                    val type = mimeType.split("/")[0].uppercase(Locale.ROOT)
                                     val finalUrl = mediaService.createMedia(
                                         title = file.name,
                                         url = url,
