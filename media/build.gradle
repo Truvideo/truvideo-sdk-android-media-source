@@ -2,7 +2,7 @@ plugins {
     id 'com.android.library'
     id 'org.jetbrains.kotlin.android'
     id 'maven-publish'
-    id 'kotlin-kapt'
+    id 'com.google.devtools.ksp'
 }
 
 def propertiesFile = rootProject.file("media/src/main/assets/version.properties")
@@ -30,6 +30,7 @@ android {
 
     buildFeatures {
         viewBinding true
+        buildConfig = true
     }
 
     compileOptions {
@@ -41,9 +42,21 @@ android {
         jvmTarget = '1.8'
     }
 
-    kapt {
-        arguments {
-            arg("room.schemaLocation", "$projectDir/schemas")
+    ksp {
+        arg('room.schemaLocation', "$projectDir/schemas")
+    }
+
+    flavorDimensions = ['environments']
+
+    productFlavors {
+        beta {
+            dimension 'environments'
+        }
+        rc {
+            dimension 'environments'
+        }
+        prod {
+            dimension 'environments'
         }
     }
 }
@@ -51,7 +64,7 @@ android {
 dependencies {
     implementation "androidx.startup:startup-runtime:1.1.1"
 
-    implementation 'androidx.core:core-ktx:1.12.0'
+    implementation 'androidx.core:core-ktx:1.13.1'
     implementation 'androidx.lifecycle:lifecycle-extensions:2.2.0'
     implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.7.0'
     implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.7.0'
@@ -62,13 +75,9 @@ dependencies {
     implementation 'com.amazonaws:aws-android-sdk-cognito:2.16.6'
 
     // Room
-    def room_version = "2.6.1"
-
-    implementation "androidx.room:room-runtime:$room_version"
-    annotationProcessor "androidx.room:room-compiler:$room_version"
-
-    // To use Kotlin annotation processing tool (kapt)
-    kapt "androidx.room:room-compiler:$room_version"
+    implementation "androidx.room:room-runtime:2.6.1"
+    annotationProcessor "androidx.room:room-compiler:2.6.1"
+    ksp "androidx.room:room-compiler:2.6.1"
 
     testImplementation 'junit:junit:4.13.2'
     testImplementation "androidx.test:core:1.5.0"
@@ -90,7 +99,6 @@ project.afterEvaluate {
                 setGroupId 'com.truvideo.sdk'
                 setArtifactId 'media'
                 version android.defaultConfig.versionName
-                artifact bundleReleaseAar
 
                 pom.withXml {
                     //noinspection GroovyImplicitNullArgumentCall

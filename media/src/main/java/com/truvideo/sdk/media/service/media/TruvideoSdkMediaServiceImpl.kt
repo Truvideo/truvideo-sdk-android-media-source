@@ -1,13 +1,14 @@
 package com.truvideo.sdk.media.service.media
 
+import com.truvideo.sdk.media.interfaces.TruvideoSdkVideoAuthAdapter
 import org.json.JSONObject
-import truvideo.sdk.common.TruvideoSdk
-import truvideo.sdk.common.exception.TruvideoSdkAuthenticationRequiredException
 import truvideo.sdk.common.exception.TruvideoSdkException
+import truvideo.sdk.common.sdk_common
 
-internal class TruvideoSdkMediaServiceImpl : TruvideoSdkMediaService {
+internal class TruvideoSdkMediaServiceImpl(
+    private val authAdapter: TruvideoSdkVideoAuthAdapter
+) : TruvideoSdkMediaService {
 
-    private val common = TruvideoSdk.instance
 
     override suspend fun createMedia(
         title: String,
@@ -15,13 +16,10 @@ internal class TruvideoSdkMediaServiceImpl : TruvideoSdkMediaService {
         size: Long,
         type: String
     ): String {
-        common.auth.refreshAuthentication()
+        authAdapter.validateAuthentication()
+        authAdapter.refresh()
 
-        if (!common.auth.isAuthenticated) {
-            throw TruvideoSdkAuthenticationRequiredException()
-        }
-
-        val token = common.auth.authentication?.accessToken ?: ""
+        val token = authAdapter.token
 
         val headers = mapOf(
             "Authorization" to "Bearer $token",
@@ -37,12 +35,11 @@ internal class TruvideoSdkMediaServiceImpl : TruvideoSdkMediaService {
             put("size", size)
         }
 
-        val response = TruvideoSdk.instance.http.post(
+        val response = sdk_common.http.post(
             url = "https://sdk-mobile-api-beta.truvideo.com:443/api/media",
             headers = headers,
             body = body.toString(),
-            retry = true,
-            printLogs = true
+            retry = true
         )
 
         if (response == null || !response.isSuccess) {

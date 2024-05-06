@@ -14,8 +14,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import truvideo.sdk.common.TruvideoSdk
 import truvideo.sdk.common.exception.TruvideoSdkException
+import truvideo.sdk.common.sdk_common
 import java.io.File
 import java.util.Locale
 
@@ -31,7 +31,7 @@ internal class TruvideoSdkMediaFileUploadEngine(
         val mutex = Mutex()
 
         // Get credentials
-        val credentials = TruvideoSdk.instance.auth.settings?.credentials
+        val credentials = sdk_common.auth.settings.value?.credentials
         if (credentials == null) {
             callback.onError(id, TruvideoSdkException("Invalid credentials"))
             return

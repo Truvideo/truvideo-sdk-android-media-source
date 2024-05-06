@@ -17,7 +17,9 @@ class TruvideoSdkMediaInitializer : Initializer<Unit> {
         val authAdapter = AuthAdapterImpl(versionPropertiesAdapter)
         val mediaFileUploadRequestRepository = TruvideoSdkMediaFileUploadRequestRepositoryImpl(context)
         val s3ClientUseCase = S3ClientUseCase(context)
-        val mediaService = TruvideoSdkMediaServiceImpl()
+        val mediaService = TruvideoSdkMediaServiceImpl(
+            authAdapter = authAdapter
+        )
         val uploadFileUseCase = UploadFileUseCase(
             context = context,
             s3ClientUseCase = s3ClientUseCase
