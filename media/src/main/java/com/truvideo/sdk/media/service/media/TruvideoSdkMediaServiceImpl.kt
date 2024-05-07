@@ -3,6 +3,7 @@ package com.truvideo.sdk.media.service.media
 import com.truvideo.sdk.media.interfaces.TruvideoSdkVideoAuthAdapter
 import org.json.JSONObject
 import truvideo.sdk.common.exception.TruvideoSdkException
+import truvideo.sdk.common.model.baseUrl
 import truvideo.sdk.common.sdk_common
 
 internal class TruvideoSdkMediaServiceImpl(
@@ -35,8 +36,9 @@ internal class TruvideoSdkMediaServiceImpl(
             put("size", size)
         }
 
+        val baseUrl = sdk_common.configuration.environment.baseUrl
         val response = sdk_common.http.post(
-            url = "https://sdk-mobile-api-beta.truvideo.com:443/api/media",
+            url = "$baseUrl/api/media",
             headers = headers,
             body = body.toString(),
             retry = true
@@ -47,5 +49,7 @@ internal class TruvideoSdkMediaServiceImpl(
         }
 
         return JSONObject(response.body).getString("url")
+
+
     }
 }
