@@ -125,7 +125,9 @@ internal class TruvideoSdkMediaFileUploadRequestRepositoryImpl(
         model.mediaURL = response.url
         model.tags = response.tags as MutableMap<String, String>
         model.status = TruvideoSdkMediaFileUploadStatus.COMPLETED
-        //TODO: Update data
+        model.transcriptionUrl = response.transcriptionUrl
+        model.transcriptionLength = response.transcriptionLength
+        //TODO: Check transcriptionLength Type
 
         update(model)
     }
