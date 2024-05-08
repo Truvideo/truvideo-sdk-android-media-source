@@ -27,7 +27,7 @@ class ExampleFileUploadJava {
                 public void onComplete(@NonNull String id, @NonNull TruvideoSdkMediaFileUploadRequest response) {
                     // Handle complete upload
                     String url = response.getUrl();
-//                    String transcriptionURL = response.getTranscriptionURL();
+                    String transcriptionUrl = response.getTranscriptionUrl();
                     Map<String, String> tags = response.getTags();
                 }
 
