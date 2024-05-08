@@ -90,19 +90,9 @@ data class TruvideoSdkMediaFileUploadRequest(
         }
     }
 
-    suspend fun upload(callback: TruvideoSdkMediaFileUploadCallback) {
-        (engine as? TruvideoSdkMediaFileUploadEngine)?.upload(id, callback)
-    }
-
-    fun upload(uploadCallback: TruvideoSdkMediaFileUploadCallback, callback: TruvideoSdkGenericCallback<Unit>) {
+    fun upload(callback: TruvideoSdkMediaFileUploadCallback) {
         CoroutineScope(Dispatchers.IO).launch {
-            try {
-                upload(uploadCallback)
-                callback.onComplete(Unit)
-            } catch (exception: Exception) {
-                val ex = if (exception is TruvideoSdkException) exception else TruvideoSdkException("Unknown error")
-                callback.onError(ex)
-            }
+            (engine as? TruvideoSdkMediaFileUploadEngine)?.upload(id, callback)
         }
     }
 
