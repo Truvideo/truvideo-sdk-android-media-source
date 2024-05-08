@@ -124,16 +124,20 @@ internal class TruvideoSdkMediaFileUploadEngine(
                                     val file = File(entity.filePath)
                                     val mimeType = FileUriUtil.getMimeType(context, Uri.fromFile(file))
                                     val type = mimeType.split("/")[0].uppercase(Locale.ROOT)
-                                    val finalUrl = mediaService.createMedia(
+                                    val finalResponse = mediaService.createMedia(
                                         title = file.name,
                                         url = url,
                                         size = file.length(),
-                                        type = type
+                                        type = type,
+                                        tags = entity.tags
                                     )
 
                                     // Move to completed
-                                    repository.updateToCompleted(id, finalUrl)
-                                    callback.onComplete(entity.id, finalUrl)
+                                    repository.updateToCompleted(id, finalResponse)
+                                    val response = repository.getById(id)
+                                    if (response != null) {
+                                        callback.onComplete(entity.id, response)
+                                    }
                                 } catch (exception: Exception) {
                                     exception.printStackTrace()
 

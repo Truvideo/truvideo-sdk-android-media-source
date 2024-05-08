@@ -1,5 +1,6 @@
 package com.truvideo.sdk.media.interfaces
 
+import com.truvideo.sdk.media.model.TruvideoSdkMediaFileUploadRequest
 import truvideo.sdk.common.exception.TruvideoSdkException
 
 
@@ -12,9 +13,10 @@ interface TruvideoSdkMediaFileUploadCallback {
      * Called when a file transfer operation is completed successfully.
      *
      * @param id The unique key associated with the completed transfer operation.
-     * @param url The URL or location where the file has been successfully transferred.
+     * @param response The response with URL or location where the file has been successfully transferred.
+     * It also has the Tags, transcriptionUrl and transcriptionLength.
      */
-    fun onComplete(id: String, url: String)
+    fun onComplete(id: String, response: TruvideoSdkMediaFileUploadRequest)
 
     /**
      * Called when the progress of a file transfer operation changes.

@@ -23,8 +23,10 @@ data class TruvideoSdkMediaFileUploadRequest(
     var filePath: String,
     var errorMessage: String? = null,
     var mediaURL: String? = null,
+    var url: String? = null,
     var progress: Float? = null,
 
+    @TypeConverters(DatabaseConverters::class) var tags: MutableMap<String, String> = mutableMapOf(),
     @TypeConverters(DatabaseConverters::class) var status: TruvideoSdkMediaFileUploadStatus = TruvideoSdkMediaFileUploadStatus.IDLE,
     @TypeConverters(DatabaseConverters::class) val createdAt: Date = Date(),
     @TypeConverters(DatabaseConverters::class) var updatedAt: Date = Date(),
