@@ -7,12 +7,16 @@ import truvideo.sdk.common.exception.TruvideoSdkException
 
 private class TestKotlin {
     suspend fun uploadFile(filePath: String) {
+        // Create a file upload request builder
         val builder = TruvideoSdkMedia.FileUploadRequestBuilder(filePath)
         builder.addTag("key", "value")
         builder.addTag("color", "red")
         builder.addTag("order-number", "123")
 
+        // Build the request
         val request = builder.build()
+
+        // Upload the file
         request.upload(object : TruvideoSdkMediaFileUploadCallback {
             override fun onComplete(id: String, response: TruvideoSdkMediaFileUploadRequest) {
                 // Handle completion
