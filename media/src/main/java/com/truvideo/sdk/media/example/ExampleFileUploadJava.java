@@ -14,14 +14,17 @@ import truvideo.sdk.common.exception.TruvideoSdkException;
 class ExampleFileUploadJava {
 
     private void uploadFile(String filePath) {
+        // Create file upload request builder
         final TruvideoSdkMediaFileUploadRequestBuilder builder = TruvideoSdkMedia.getInstance().FileUploadRequestBuilder(filePath);
         builder.addTag("key", "value");
         builder.addTag("color", "red");
         builder.addTag("order-number", "123");
 
+        // Build request
         builder.build(request -> {
+            // Here the request its ready to be used
 
-            // Upload
+            // Upload file
             request.upload(new TruvideoSdkMediaFileUploadCallback() {
                 @Override
                 public void onComplete(@NonNull String id, @NonNull TruvideoSdkMediaFileUploadRequest response) {
