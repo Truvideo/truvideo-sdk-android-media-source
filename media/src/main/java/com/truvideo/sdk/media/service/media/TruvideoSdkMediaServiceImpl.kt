@@ -1,6 +1,8 @@
 package com.truvideo.sdk.media.service.media
 
 import com.truvideo.sdk.media.interfaces.TruvideoSdkMediaAuthAdapter
+import com.google.gson.Gson
+import com.truvideo.sdk.media.model.TruVideoSdkMediaFileUploadResponse
 import org.json.JSONObject
 import truvideo.sdk.common.exception.TruvideoSdkException
 import truvideo.sdk.common.model.baseUrl
@@ -15,8 +17,9 @@ internal class TruvideoSdkMediaServiceImpl(
         title: String,
         url: String,
         size: Long,
-        type: String
-    ): String {
+        type: String,
+        tags: Map<String, String>
+    ): TruVideoSdkMediaFileUploadResponse {
         authAdapter.validateAuthentication()
         authAdapter.refresh()
 
@@ -34,6 +37,7 @@ internal class TruvideoSdkMediaServiceImpl(
             put("url", url)
             put("resolution", "LOW")
             put("size", size)
+            put("tags", JSONObject().apply { for (tag in tags) put(tag.key, tag.value) })
         }
 
         val baseUrl = sdk_common.configuration.environment.baseUrl
@@ -48,7 +52,7 @@ internal class TruvideoSdkMediaServiceImpl(
             throw TruvideoSdkException("Error creating media")
         }
 
-        return JSONObject(response.body).getString("url")
+        return Gson().fromJson(response.body, TruVideoSdkMediaFileUploadResponse::class.java)
 
 
     }

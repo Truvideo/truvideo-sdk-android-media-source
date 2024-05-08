@@ -9,7 +9,7 @@ import com.truvideo.sdk.media.model.TruvideoSdkMediaFileUploadRequest
 @Database(
     entities = [TruvideoSdkMediaFileUploadRequest::class],
     autoMigrations = [],
-    version = 1
+    version = 2
 )
 @TypeConverters(DatabaseConverters::class)
 internal abstract class AppDatabase : RoomDatabase() {

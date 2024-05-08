@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.lifecycle.LiveData
 import com.truvideo.sdk.media.data.DatabaseInstance
 import com.truvideo.sdk.media.data.FileUploadRequestDAO
+import com.truvideo.sdk.media.model.TruVideoSdkMediaFileUploadResponse
 import com.truvideo.sdk.media.model.TruvideoSdkMediaFileUploadRequest
 import com.truvideo.sdk.media.model.TruvideoSdkMediaFileUploadStatus
 import kotlinx.coroutines.CoroutineScope
@@ -116,13 +117,16 @@ internal class TruvideoSdkMediaFileUploadRequestRepositoryImpl(
         update(model)
     }
 
-    override suspend fun updateToCompleted(id: String, url: String) {
+    override suspend fun updateToCompleted(id: String, response: TruVideoSdkMediaFileUploadResponse) {
         val model = getById(id) ?: return
 
         model.progress = 1.0f
         model.errorMessage = null
-        model.mediaURL = url
+        model.mediaURL = response.url
+        model.tags = response.tags as MutableMap<String, String>
         model.status = TruvideoSdkMediaFileUploadStatus.COMPLETED
+        //TODO: Update data
+
         update(model)
     }
 

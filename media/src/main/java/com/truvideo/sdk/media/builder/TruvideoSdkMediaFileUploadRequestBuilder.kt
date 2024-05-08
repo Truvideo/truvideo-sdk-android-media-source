@@ -16,6 +16,10 @@ class TruvideoSdkMediaFileUploadRequestBuilder(
     private val mediaRepository: TruvideoSdkMediaFileUploadRequestRepository,
     private val engine: TruvideoSdkMediaEngine
 ) {
+    private val tags = mutableMapOf<String, String>()
+    fun addTag(key: String, value: String) {
+        tags[key] = value
+    }
     private val scope = CoroutineScope(Dispatchers.IO)
 
     suspend fun build(): TruvideoSdkMediaFileUploadRequest {
@@ -24,6 +28,7 @@ class TruvideoSdkMediaFileUploadRequestBuilder(
         val media = TruvideoSdkMediaFileUploadRequest(
             id = UUID.randomUUID().toString(),
             filePath = filePath,
+            tags = tags
         )
         media.engine = engine
 

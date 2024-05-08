@@ -1,6 +1,7 @@
 package com.truvideo.sdk.media.repository
 
 import androidx.lifecycle.LiveData
+import com.truvideo.sdk.media.model.TruVideoSdkMediaFileUploadResponse
 import com.truvideo.sdk.media.model.TruvideoSdkMediaFileUploadRequest
 import com.truvideo.sdk.media.model.TruvideoSdkMediaFileUploadStatus
 
@@ -24,7 +25,7 @@ interface TruvideoSdkMediaFileUploadRequestRepository {
 
     suspend fun updateProgress(id: String, progress: Float)
 
-    suspend fun updateToCompleted(id: String, url: String)
+    suspend fun updateToCompleted(id: String, url: TruVideoSdkMediaFileUploadResponse)
 
     suspend fun getById(id: String): TruvideoSdkMediaFileUploadRequest?
 
