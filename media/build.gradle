@@ -99,6 +99,7 @@ project.afterEvaluate {
                 setGroupId 'com.truvideo.sdk'
                 setArtifactId 'media'
                 version android.defaultConfig.versionName
+                artifact bundleBetaReleaseAar
 
                 pom.withXml {
                     //noinspection GroovyImplicitNullArgumentCall
