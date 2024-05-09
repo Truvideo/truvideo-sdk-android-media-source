@@ -1,7 +1,7 @@
 package com.truvideo.sdk.media.interfaces
 
 import com.truvideo.sdk.media.model.TruvideoSdkMediaFileUploadRequest
-import com.truvideo.sdk.media.exception.TruvideoSdkMediaException
+import truvideo.sdk.common.exception.TruvideoSdkException
 
 
 /**
@@ -32,5 +32,5 @@ interface TruvideoSdkMediaFileUploadCallback {
      * @param id The unique key associated with the transfer operation that encountered an error.
      * @param ex The exception that describes the error encountered during the transfer.
      */
-    fun onError(id: String, ex: TruvideoSdkMediaException)
+    fun onError(id: String, ex: TruvideoSdkException)
 }
