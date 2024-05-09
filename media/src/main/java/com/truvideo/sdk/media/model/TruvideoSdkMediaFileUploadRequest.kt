@@ -25,7 +25,7 @@ data class TruvideoSdkMediaFileUploadRequest(
     var url: String? = null,
     var progress: Float? = null,
     var transcriptionUrl: String? = null,
-    var transcriptionLength: String? = null,
+    var transcriptionLength: Float? = null,
 
     @TypeConverters(DatabaseConverters::class) var tags: MutableMap<String, String> = mutableMapOf(),
     @TypeConverters(DatabaseConverters::class) var status: TruvideoSdkMediaFileUploadStatus = TruvideoSdkMediaFileUploadStatus.IDLE,
