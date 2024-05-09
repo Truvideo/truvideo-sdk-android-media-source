@@ -4,9 +4,10 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.map
 import com.truvideo.sdk.media.builder.TruvideoSdkMediaFileUploadRequestBuilder
 import com.truvideo.sdk.media.engines.TruvideoSdkMediaFileUploadEngine
-import com.truvideo.sdk.media.interfaces.TruvideoSdkGenericCallback
+import com.truvideo.sdk.media.exception.TruvideoSdkMediaException
 import com.truvideo.sdk.media.interfaces.TruvideoSdkMedia
-import com.truvideo.sdk.media.interfaces.TruvideoSdkVideoAuthAdapter
+import com.truvideo.sdk.media.interfaces.TruvideoSdkMediaAuthAdapter
+import com.truvideo.sdk.media.interfaces.TruvideoSdkMediaCallback
 import com.truvideo.sdk.media.model.TruvideoSdkMediaFileUploadRequest
 import com.truvideo.sdk.media.model.TruvideoSdkMediaFileUploadStatus
 import com.truvideo.sdk.media.repository.TruvideoSdkMediaFileUploadRequestRepository
@@ -16,7 +17,7 @@ import kotlinx.coroutines.launch
 import truvideo.sdk.common.exception.TruvideoSdkException
 
 internal class TruvideoSdkMediaImpl(
-    private val authAdapter: TruvideoSdkVideoAuthAdapter,
+    private val authAdapter: TruvideoSdkMediaAuthAdapter,
     private val mediaFileUploadRequestRepository: TruvideoSdkMediaFileUploadRequestRepository,
     private val fileUploadEngine: TruvideoSdkMediaFileUploadEngine,
 ) : TruvideoSdkMedia {
@@ -39,7 +40,7 @@ internal class TruvideoSdkMediaImpl(
 
     override fun streamAllFileUploadRequests(
         status: TruvideoSdkMediaFileUploadStatus?,
-        callback: TruvideoSdkGenericCallback<LiveData<List<TruvideoSdkMediaFileUploadRequest>>>
+        callback: TruvideoSdkMediaCallback<LiveData<List<TruvideoSdkMediaFileUploadRequest>>>
     ) {
         scope.launch {
             try {
@@ -48,12 +49,8 @@ internal class TruvideoSdkMediaImpl(
             } catch (exception: Exception) {
                 exception.printStackTrace()
 
-                val externalException = if (exception is TruvideoSdkException) {
-                    exception
-                } else {
-                    TruvideoSdkException("Unknown exception")
-                }
-                callback.onError(externalException)
+                val message = if (exception is TruvideoSdkException) exception.message else "Unknown exception"
+                callback.onError(TruvideoSdkMediaException(message))
             }
         }
     }
@@ -73,7 +70,7 @@ internal class TruvideoSdkMediaImpl(
 
     override fun streamFileUploadRequestById(
         id: String,
-        callback: TruvideoSdkGenericCallback<LiveData<TruvideoSdkMediaFileUploadRequest?>>
+        callback: TruvideoSdkMediaCallback<LiveData<TruvideoSdkMediaFileUploadRequest?>>
     ) {
         scope.launch {
             try {
@@ -82,12 +79,8 @@ internal class TruvideoSdkMediaImpl(
             } catch (exception: Exception) {
                 exception.printStackTrace()
 
-                val externalException = if (exception is TruvideoSdkException) {
-                    exception
-                } else {
-                    TruvideoSdkException("Unknown exception")
-                }
-                callback.onError(externalException)
+                val message = if (exception is TruvideoSdkException) exception.message else "Unknown exception"
+                callback.onError(TruvideoSdkMediaException(message))
             }
         }
     }
@@ -106,7 +99,7 @@ internal class TruvideoSdkMediaImpl(
 
     override fun getAllFileUploadRequests(
         status: TruvideoSdkMediaFileUploadStatus?,
-        callback: TruvideoSdkGenericCallback<List<TruvideoSdkMediaFileUploadRequest>>
+        callback: TruvideoSdkMediaCallback<List<TruvideoSdkMediaFileUploadRequest>>
     ) {
         scope.launch {
             try {
@@ -115,12 +108,8 @@ internal class TruvideoSdkMediaImpl(
             } catch (exception: Exception) {
                 exception.printStackTrace()
 
-                val externalException = if (exception is TruvideoSdkException) {
-                    exception
-                } else {
-                    TruvideoSdkException("Unknown exception")
-                }
-                callback.onError(externalException)
+                val message = if (exception is TruvideoSdkException) exception.message else "Unknown exception"
+                callback.onError(TruvideoSdkMediaException(message))
             }
         }
     }

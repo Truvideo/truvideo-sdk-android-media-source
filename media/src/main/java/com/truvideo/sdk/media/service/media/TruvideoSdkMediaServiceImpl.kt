@@ -1,13 +1,13 @@
 package com.truvideo.sdk.media.service.media
 
-import com.truvideo.sdk.media.interfaces.TruvideoSdkVideoAuthAdapter
+import com.truvideo.sdk.media.interfaces.TruvideoSdkMediaAuthAdapter
 import org.json.JSONObject
 import truvideo.sdk.common.exception.TruvideoSdkException
 import truvideo.sdk.common.model.baseUrl
 import truvideo.sdk.common.sdk_common
 
 internal class TruvideoSdkMediaServiceImpl(
-    private val authAdapter: TruvideoSdkVideoAuthAdapter
+    private val authAdapter: TruvideoSdkMediaAuthAdapter
 ) : TruvideoSdkMediaService {
 
 

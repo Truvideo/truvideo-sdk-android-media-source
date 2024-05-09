@@ -1,6 +1,6 @@
 package com.truvideo.sdk.media.interfaces
 
-import truvideo.sdk.common.exception.TruvideoSdkException
+import com.truvideo.sdk.media.exception.TruvideoSdkMediaException
 
 
 /**
@@ -27,8 +27,8 @@ interface TruvideoSdkMediaFileUploadCallback {
     /**
      * Called when an error occurs during a file transfer operation.
      *
-     * @param key The unique key associated with the transfer operation that encountered an error.
+     * @param id The unique key associated with the transfer operation that encountered an error.
      * @param ex The exception that describes the error encountered during the transfer.
      */
-    fun onError(id: String, ex: TruvideoSdkException)
+    fun onError(id: String, ex: TruvideoSdkMediaException)
 }

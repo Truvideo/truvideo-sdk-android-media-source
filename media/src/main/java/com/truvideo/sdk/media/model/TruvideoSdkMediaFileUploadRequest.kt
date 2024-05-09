@@ -7,14 +7,13 @@ import androidx.room.Ignore
 import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
 import com.truvideo.sdk.media.data.DatabaseConverters
-import com.truvideo.sdk.media.engines.TruvideoSdkMediaEngine
 import com.truvideo.sdk.media.engines.TruvideoSdkMediaFileUploadEngine
-import com.truvideo.sdk.media.interfaces.TruvideoSdkGenericCallback
+import com.truvideo.sdk.media.exception.TruvideoSdkMediaException
+import com.truvideo.sdk.media.interfaces.TruvideoSdkMediaCallback
 import com.truvideo.sdk.media.interfaces.TruvideoSdkMediaFileUploadCallback
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import truvideo.sdk.common.exception.TruvideoSdkException
 import java.util.Date
 
 @Entity(tableName = "FileUploadRequest")
@@ -36,84 +35,89 @@ data class TruvideoSdkMediaFileUploadRequest(
     internal var folder: String = ""
 ) {
     @Ignore
-    internal var engine: TruvideoSdkMediaEngine? = null
+    internal var engine: TruvideoSdkMediaFileUploadEngine? = null
 
     suspend fun cancel() {
-        (engine as? TruvideoSdkMediaFileUploadEngine)?.cancel(id)
+        val e = engine ?: throw TruvideoSdkMediaException("Engine is null")
+        e.cancel(id)
     }
 
-    fun cancel(callback: TruvideoSdkGenericCallback<Unit>) {
+    fun cancel(callback: TruvideoSdkMediaCallback<Unit>) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 cancel()
                 callback.onComplete(Unit)
             } catch (exception: Exception) {
-                val ex = if (exception is TruvideoSdkException) exception else TruvideoSdkException("Unknown error")
-                callback.onError(ex)
+                exception.printStackTrace()
+                callback.onError(TruvideoSdkMediaException(exception.message ?: "Unknown error"))
             }
         }
     }
 
     suspend fun pause() {
-        (engine as? TruvideoSdkMediaFileUploadEngine)?.pause(id)
+        val e = engine ?: throw TruvideoSdkMediaException("Engine is null")
+        e.pause(id)
     }
 
-    fun pause(callback: TruvideoSdkGenericCallback<Unit>) {
+    fun pause(callback: TruvideoSdkMediaCallback<Unit>) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 pause()
                 callback.onComplete(Unit)
             } catch (exception: Exception) {
-                val ex = if (exception is TruvideoSdkException) exception else TruvideoSdkException("Unknown error")
-                callback.onError(ex)
+                exception.printStackTrace()
+                callback.onError(TruvideoSdkMediaException(exception.message ?: "Unknown error"))
             }
         }
     }
 
     suspend fun resume() {
-        (engine as? TruvideoSdkMediaFileUploadEngine)?.resume(id)
+        val e = engine ?: throw TruvideoSdkMediaException("Engine is null")
+        e.resume(id)
     }
 
-    fun resume(callback: TruvideoSdkGenericCallback<Unit>) {
+    fun resume(callback: TruvideoSdkMediaCallback<Unit>) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 resume()
                 callback.onComplete(Unit)
             } catch (exception: Exception) {
-                val ex = if (exception is TruvideoSdkException) exception else TruvideoSdkException("Unknown error")
-                callback.onError(ex)
+                exception.printStackTrace()
+                callback.onError(TruvideoSdkMediaException(exception.message ?: "Unknown error"))
             }
         }
     }
 
     suspend fun upload(callback: TruvideoSdkMediaFileUploadCallback) {
-        (engine as? TruvideoSdkMediaFileUploadEngine)?.upload(id, callback)
+        val e = engine ?: throw TruvideoSdkMediaException("Engine is null")
+        e.upload(id, callback)
     }
 
-    fun upload(uploadCallback: TruvideoSdkMediaFileUploadCallback, callback: TruvideoSdkGenericCallback<Unit>) {
+    fun upload(uploadCallback: TruvideoSdkMediaFileUploadCallback, callback: TruvideoSdkMediaCallback<Unit>) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 upload(uploadCallback)
                 callback.onComplete(Unit)
             } catch (exception: Exception) {
-                val ex = if (exception is TruvideoSdkException) exception else TruvideoSdkException("Unknown error")
-                callback.onError(ex)
+                exception.printStackTrace()
+                callback.onError(TruvideoSdkMediaException(exception.message ?: "Unknown error"))
             }
         }
     }
 
     suspend fun delete() {
-        (engine as? TruvideoSdkMediaFileUploadEngine)?.delete(id)
+        val e = engine ?: throw TruvideoSdkMediaException("Engine is null")
+        e.delete(id)
     }
 
-    fun delete(callback: TruvideoSdkGenericCallback<Unit>) {
+    fun delete(callback: TruvideoSdkMediaCallback<Unit>) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 delete()
                 callback.onComplete(Unit)
             } catch (exception: Exception) {
-                val ex = if (exception is TruvideoSdkException) exception else TruvideoSdkException("Unknown error")
-                callback.onError(ex)
+                exception.printStackTrace()
+                callback.onError(TruvideoSdkMediaException(exception.message ?: "Unknown error"))
             }
         }
     }

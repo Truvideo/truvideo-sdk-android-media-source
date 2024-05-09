@@ -1,6 +1,6 @@
 package com.truvideo.sdk.media.adapter
 
-import com.truvideo.sdk.media.interfaces.TruvideoSdkVideoAuthAdapter
+import com.truvideo.sdk.media.interfaces.TruvideoSdkMediaAuthAdapter
 import truvideo.sdk.common.exception.TruvideoSdkAuthenticationRequiredException
 import truvideo.sdk.common.exception.TruvideoSdkException
 import truvideo.sdk.common.exception.TruvideoSdkNotInitializedException
@@ -8,7 +8,7 @@ import truvideo.sdk.common.sdk_common
 
 internal class AuthAdapterImpl(
     versionPropertiesAdapter: VersionPropertiesAdapter
-) : TruvideoSdkVideoAuthAdapter {
+) : TruvideoSdkMediaAuthAdapter {
 
     private val validateAuthentication: Boolean = versionPropertiesAdapter.readProperty("validateAuthentication") == "true"
 
