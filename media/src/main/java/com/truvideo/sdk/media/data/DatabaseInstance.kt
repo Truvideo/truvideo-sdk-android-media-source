@@ -15,7 +15,7 @@ internal object DatabaseInstance {
 
     private fun buildDatabase(context: Context): AppDatabase {
         return Room
-            .databaseBuilder(context, AppDatabase::class.java, "app-database")
+            .databaseBuilder(context, AppDatabase::class.java, "db")
             .fallbackToDestructiveMigration()
             .fallbackToDestructiveMigrationOnDowngrade()
             .build()

@@ -6,7 +6,7 @@
     "entities": [
       {
         "tableName": "FileUploadRequest",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `progress` REAL, `errorMessage` TEXT, `mediaURL` TEXT, `filePath` TEXT NOT NULL, `status` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, `externalId` INTEGER, `bucketName` TEXT NOT NULL, `region` TEXT NOT NULL, `poolId` TEXT NOT NULL, `folder` TEXT NOT NULL, PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `filePath` TEXT NOT NULL, `errorMessage` TEXT, `mediaURL` TEXT, `progress` REAL, `status` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, `externalId` INTEGER, `bucketName` TEXT NOT NULL, `region` TEXT NOT NULL, `poolId` TEXT NOT NULL, `folder` TEXT NOT NULL, PRIMARY KEY(`id`))",
         "fields": [
           {
             "fieldPath": "id",
@@ -15,10 +15,10 @@
             "notNull": true
           },
           {
-            "fieldPath": "progress",
-            "columnName": "progress",
-            "affinity": "REAL",
-            "notNull": false
+            "fieldPath": "filePath",
+            "columnName": "filePath",
+            "affinity": "TEXT",
+            "notNull": true
           },
           {
             "fieldPath": "errorMessage",
@@ -33,10 +33,10 @@
             "notNull": false
           },
           {
-            "fieldPath": "filePath",
-            "columnName": "filePath",
-            "affinity": "TEXT",
-            "notNull": true
+            "fieldPath": "progress",
+            "columnName": "progress",
+            "affinity": "REAL",
+            "notNull": false
           },
           {
             "fieldPath": "status",
