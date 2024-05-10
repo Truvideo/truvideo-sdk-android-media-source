@@ -43,4 +43,5 @@ interface TruvideoSdkMedia {
     ): List<TruvideoSdkMediaFileUploadRequest>
 
 
+    val environment: String
 }

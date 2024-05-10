@@ -135,4 +135,7 @@ internal class TruvideoSdkMediaImpl(
         items.forEach { it.engine = fileUploadEngine }
         return items
     }
+
+    override val environment: String
+        get() = BuildConfig.FLAVOR
 }
