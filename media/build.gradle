@@ -16,7 +16,6 @@ android {
     defaultConfig {
         minSdk 24
         targetSdk 34
-        versionCode properties.getProperty("versionCode").toInteger()
         versionName properties.getProperty("versionName")
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
