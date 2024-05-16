@@ -20,6 +20,12 @@ class TruvideoSdkMediaFileUploadRequestBuilder(
     fun addTag(key: String, value: String) {
         tags[key] = value
     }
+
+
+    fun setMetadata(map: Map<String, Any?>) {
+
+    }
+
     private val scope = CoroutineScope(Dispatchers.IO)
 
     suspend fun build(): TruvideoSdkMediaFileUploadRequest {

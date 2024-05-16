@@ -42,7 +42,6 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.truvideo.media.app.ui.theme.TruvideosdkmediaTheme
 import com.truvideo.media.app.utils.RealPathUtil
-import com.truvideo.sdk.core.TruvideoSdk
 import com.truvideo.sdk.media.TruvideoSdkMedia
 import com.truvideo.sdk.media.interfaces.TruvideoSdkMediaFileUploadCallback
 import com.truvideo.sdk.media.model.TruvideoSdkMediaFileUploadRequest
@@ -111,6 +110,7 @@ class MainActivity : ComponentActivity() {
             if (file.exists()) {
                 scope.launch {
                     val builder = TruvideoSdkMedia.FileUploadRequestBuilder(path)
+                    builder.addTag("key1", "value1")
                     builder.build()
                 }
             } else {
@@ -179,6 +179,9 @@ class MainActivity : ComponentActivity() {
                                                             response: TruvideoSdkMediaFileUploadRequest
                                                         ) {
                                                             Log.d("TruvideoSdkMedia", "$id Complete")
+                                                            response.tags.entries.forEach {
+                                                                Log.d("TruvideoSdkMedia", "${it.key} = ${it.value}")
+                                                            }
                                                         }
 
                                                         override fun onProgressChanged(
