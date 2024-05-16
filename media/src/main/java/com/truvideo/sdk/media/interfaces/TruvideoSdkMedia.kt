@@ -42,5 +42,5 @@ interface TruvideoSdkMedia {
         status: TruvideoSdkMediaFileUploadStatus? = null,
     ): List<TruvideoSdkMediaFileUploadRequest>
 
-
+    val environment: String
 }

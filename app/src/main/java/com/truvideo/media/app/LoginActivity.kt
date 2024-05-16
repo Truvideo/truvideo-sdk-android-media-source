@@ -2,6 +2,7 @@ package com.truvideo.media.app
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Box
@@ -25,6 +26,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.truvideo.media.app.ui.theme.TruvideosdkmediaTheme
 import com.truvideo.sdk.core.TruvideoSdk
+import com.truvideo.sdk.media.TruvideoSdkMedia
 import kotlinx.coroutines.launch
 import truvideo.sdk.components.button.TruvideoButton
 import java.nio.charset.StandardCharsets
@@ -57,6 +59,7 @@ class LoginActivity : ComponentActivity() {
         val scope = rememberCoroutineScope()
 
         LaunchedEffect(Unit) {
+            Log.d("TruvideoSdkMedia", "Environment: ${TruvideoSdkMedia.environment}")
             if (TruvideoSdk.isAuthenticated && !TruvideoSdk.isAuthenticationExpired) {
                 try {
                     isLoading = true

@@ -16,18 +16,17 @@ class TruvideoSdkMediaFileUploadRequestBuilder(
     private val mediaRepository: TruvideoSdkMediaFileUploadRequestRepository,
     private val engine: TruvideoSdkMediaEngine
 ) {
+    private val scope = CoroutineScope(Dispatchers.IO)
     private val tags = mutableMapOf<String, String>()
+
     fun addTag(key: String, value: String) {
         tags[key] = value
     }
 
-
     fun setMetadata(map: Map<String, Any?>) {
 
     }
-
-    private val scope = CoroutineScope(Dispatchers.IO)
-
+    
     suspend fun build(): TruvideoSdkMediaFileUploadRequest {
         if (engine !is TruvideoSdkMediaFileUploadEngine) throw TruvideoSdkMediaException("Invalid engine")
 
