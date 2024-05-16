@@ -25,13 +25,16 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.truvideo.media.app.ui.theme.TruvideosdkmediaTheme
 import com.truvideo.sdk.core.TruvideoSdk
+import com.truvideo.sdk.core.interfaces.TruvideoSdkInitCallback
 import kotlinx.coroutines.launch
+import truvideo.sdk.common.exception.TruvideoSdkException
 import truvideo.sdk.components.button.TruvideoButton
 import java.nio.charset.StandardCharsets
 import java.security.InvalidKeyException
 import java.security.NoSuchAlgorithmException
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
+
 
 class LoginActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -55,8 +58,13 @@ class LoginActivity : ComponentActivity() {
 
         LaunchedEffect(Unit) {
             if(TruvideoSdk.isAuthenticated && !TruvideoSdk.isAuthenticationExpired){
-                val intent = Intent(context, MainActivity::class.java)
-                startActivity(intent)
+                try {
+                    TruvideoSdk.init()
+                    val intent = Intent(context, MainActivity::class.java)
+                    startActivity(intent)
+                }catch (e: Exception) {
+                    e.printStackTrace()
+                }
             }
         }
 
@@ -72,6 +80,7 @@ class LoginActivity : ComponentActivity() {
                         signature = signature
                     )
 
+                    TruvideoSdk.init()
 
                     val intent = Intent(context, MainActivity::class.java)
                     startActivity(intent)

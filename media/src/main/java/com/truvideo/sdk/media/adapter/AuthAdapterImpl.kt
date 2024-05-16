@@ -20,10 +20,10 @@ internal class AuthAdapterImpl(
             throw TruvideoSdkAuthenticationRequiredException()
         }
 
-        val isInitialized = sdk_common.auth.isInitialized.value
-        if (!isInitialized) {
-            throw TruvideoSdkNotInitializedException()
-        }
+//        val isInitialized = sdk_common.auth.isInitialized.value
+//        if (!isInitialized) {
+//            throw TruvideoSdkNotInitializedException()
+//        }
     }
 
     override suspend fun refresh() = sdk_common.auth.refresh()

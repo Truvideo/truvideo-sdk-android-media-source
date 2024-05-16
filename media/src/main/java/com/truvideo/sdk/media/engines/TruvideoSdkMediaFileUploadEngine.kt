@@ -35,14 +35,14 @@ internal class TruvideoSdkMediaFileUploadEngine(
         // Get credentials
         val credentials = sdk_common.auth.settings.value?.credentials
         if (credentials == null) {
-            callback.onError(id, TruvideoSdkMediaException("Invalid credentials"))
+            callback.onError(id, TruvideoSdkException("Invalid credentials"))
             return
         }
 
         // Get entity
         val entity = repository.getById(id)
         if (entity == null) {
-            callback.onError(id, TruvideoSdkMediaException("File upload request not found"))
+            callback.onError(id, TruvideoSdkException("File upload request not found"))
             return
         }
 
@@ -144,7 +144,7 @@ internal class TruvideoSdkMediaFileUploadEngine(
                                     exception.printStackTrace()
 
                                     val message = if (exception is TruvideoSdkException) exception.message else "Unknown error"
-                                    val externalException = TruvideoSdkMediaException(message)
+                                    val externalException = TruvideoSdkException(message)
 
                                     // Move to error
                                     repository.updateToError(id, message)
@@ -171,7 +171,7 @@ internal class TruvideoSdkMediaFileUploadEngine(
             exception.printStackTrace()
 
             val message = if (exception is TruvideoSdkException) exception.message else "Unknown error"
-            val externalException = TruvideoSdkMediaException(message)
+            val externalException = TruvideoSdkException(message)
 
             // Move to error
             repository.updateToError(id, message)

@@ -45,7 +45,7 @@ internal class TruvideoSdkMediaServiceImpl(
             url = "$baseUrl/api/media",
             headers = headers,
             body = body.toString(),
-            retry = true
+            retry = false
         )
 
         if (response == null || !response.isSuccess) {

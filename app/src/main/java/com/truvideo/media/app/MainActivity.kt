@@ -42,11 +42,13 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.truvideo.media.app.ui.theme.TruvideosdkmediaTheme
 import com.truvideo.media.app.utils.RealPathUtil
+import com.truvideo.sdk.core.TruvideoSdk
 import com.truvideo.sdk.media.TruvideoSdkMedia
 import com.truvideo.sdk.media.interfaces.TruvideoSdkMediaFileUploadCallback
 import com.truvideo.sdk.media.model.TruvideoSdkMediaFileUploadRequest
 import kotlinx.coroutines.launch
 import truvideo.sdk.common.exception.TruvideoSdkException
+import truvideo.sdk.common.sdk_common
 import truvideo.sdk.components.button.TruvideoButton
 import java.io.File
 
@@ -120,6 +122,8 @@ class MainActivity : ComponentActivity() {
             TruvideoSdkMedia.streamAllFileUploadRequests().observe(lifecycleOwner) {
                 requests = it
             }
+
+            Log.d("JOSE", "isAuthenticated: ${sdk_common.auth.isInitialized.value}")
         }
 
 
@@ -169,15 +173,25 @@ class MainActivity : ComponentActivity() {
                                             try {
                                                 it.upload(
                                                     object : TruvideoSdkMediaFileUploadCallback {
-                                                        override fun onComplete(id: String, url: String) {
+
+                                                        override fun onComplete(
+                                                            id: String,
+                                                            response: TruvideoSdkMediaFileUploadRequest
+                                                        ) {
                                                             Log.d("TruvideoSdkMedia", "$id Complete")
                                                         }
 
-                                                        override fun onProgressChanged(id: String, progress: Float) {
+                                                        override fun onProgressChanged(
+                                                            id: String,
+                                                            progress: Float
+                                                        ) {
                                                             Log.d("TruvideoSdkMedia", "$id $progress")
                                                         }
 
-                                                        override fun onError(id: String, ex: TruvideoSdkException) {
+                                                        override fun onError(
+                                                            id: String,
+                                                            ex: TruvideoSdkException
+                                                        ) {
                                                             Log.d("TruvideoSdkMedia", "$id $ex")
                                                         }
                                                     }
