@@ -16,7 +16,6 @@ android {
     defaultConfig {
         minSdk 24
         targetSdk 34
-        versionCode properties.getProperty("versionCode").toInteger()
         versionName properties.getProperty("versionName")
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -97,9 +96,18 @@ project.afterEvaluate {
     publishing {
         publications {
             library(MavenPublication) {
-                setGroupId 'com.truvideo.sdk'
-                setArtifactId 'media'
+                setGroupId 'com.truvideo'
+                setArtifactId 'sdk-media'
                 version android.defaultConfig.versionName
+
+                def environment = properties.getProperty("environment")
+                if (environment == "beta") {
+                    artifact bundleBetaReleaseAar
+                } else if (environment == "rc") {
+                    artifact bundleRcReleaseAar
+                } else {
+                    artifact bundleProdReleaseAar
+                }
 
                 pom.withXml {
                     //noinspection GroovyImplicitNullArgumentCall

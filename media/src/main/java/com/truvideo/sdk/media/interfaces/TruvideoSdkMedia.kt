@@ -31,8 +31,6 @@ interface TruvideoSdkMedia {
 
     suspend fun streamFileUploadRequestById(id: String): LiveData<TruvideoSdkMediaFileUploadRequest?>
 
-
-
     fun getAllFileUploadRequests(
         status: TruvideoSdkMediaFileUploadStatus? = null,
         callback: TruvideoSdkMediaCallback<List<TruvideoSdkMediaFileUploadRequest>>
