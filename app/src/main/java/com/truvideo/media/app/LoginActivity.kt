@@ -28,6 +28,8 @@ import com.truvideo.media.app.ui.theme.TruvideosdkmediaTheme
 import com.truvideo.sdk.core.TruvideoSdk
 import com.truvideo.sdk.media.TruvideoSdkMedia
 import kotlinx.coroutines.launch
+import truvideo.sdk.common.model.TruvideoSdkEnvironment
+import truvideo.sdk.common.sdk_common
 import truvideo.sdk.components.button.TruvideoButton
 import java.nio.charset.StandardCharsets
 import java.security.InvalidKeyException
@@ -53,13 +55,16 @@ class LoginActivity : ComponentActivity() {
     @Composable
     fun Content() {
         var apiKey by remember { mutableStateOf("VS2SG9WK") }
+//        var apiKey by remember { mutableStateOf("EPhPPsbv7e") }
         var secret by remember { mutableStateOf("ST2K33GR") }
+//        var secret by remember{ mutableStateOf("9lHCnkfeLl") }
         var isLoading by remember { mutableStateOf(false) }
         val context = LocalContext.current
         val scope = rememberCoroutineScope()
 
         LaunchedEffect(Unit) {
-            Log.d("TruvideoSdkMedia", "Environment: ${TruvideoSdkMedia.environment}")
+            TruvideoSdk.clear()
+            sdk_common.configuration.environment = TruvideoSdkEnvironment.RC
             if (TruvideoSdk.isAuthenticated && !TruvideoSdk.isAuthenticationExpired) {
                 try {
                     isLoading = true

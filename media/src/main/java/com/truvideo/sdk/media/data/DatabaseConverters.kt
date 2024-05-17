@@ -1,6 +1,5 @@
 package com.truvideo.sdk.media.data
 
-import android.net.Uri
 import androidx.room.TypeConverter
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
@@ -29,15 +28,15 @@ internal class DatabaseConverters {
     }
 
     @TypeConverter
-    fun fromMap(map:  MutableMap<String, String>?): String? {
+    fun fromMap(map: Map<String, String>?): String? {
         if (map == null) return null
         return Gson().toJson(map)
     }
 
     @TypeConverter
-    fun toMap(json: String?): MutableMap<String, String>? {
+    fun toMap(json: String?): Map<String, String>? {
         if (json == null) return null
-        return Gson().fromJson(json, object: TypeToken<MutableMap<String, String>>() {}.type)
+        return Gson().fromJson(json, object : TypeToken<Map<String, String>>() {}.type)
     }
 
 }

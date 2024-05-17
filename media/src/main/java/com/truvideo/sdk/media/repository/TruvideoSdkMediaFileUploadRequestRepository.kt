@@ -25,7 +25,7 @@ interface TruvideoSdkMediaFileUploadRequestRepository {
 
     suspend fun updateProgress(id: String, progress: Float)
 
-    suspend fun updateToCompleted(id: String, url: TruVideoSdkMediaFileUploadResponse)
+    suspend fun updateToCompleted(id: String, media: TruVideoSdkMediaFileUploadResponse)
 
     suspend fun getById(id: String): TruvideoSdkMediaFileUploadRequest?
 

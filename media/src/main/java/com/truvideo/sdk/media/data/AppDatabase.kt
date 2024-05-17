@@ -3,15 +3,16 @@ package com.truvideo.sdk.media.data
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import com.truvideo.sdk.media.data.converters.MetadataConverter
 import com.truvideo.sdk.media.model.TruvideoSdkMediaFileUploadRequest
 
 @Database(
     entities = [TruvideoSdkMediaFileUploadRequest::class],
     autoMigrations = [],
-    version = 2
+    version = 1
 )
 
-@TypeConverters(DatabaseConverters::class)
+@TypeConverters(DatabaseConverters::class, MetadataConverter::class)
 internal abstract class AppDatabase : RoomDatabase() {
     abstract fun mediaDao(): FileUploadRequestDAO
 }
