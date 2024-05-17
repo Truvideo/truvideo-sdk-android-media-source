@@ -2,6 +2,7 @@ package com.truvideo.media.app
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Box
@@ -25,7 +26,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.truvideo.media.app.ui.theme.TruvideosdkmediaTheme
 import com.truvideo.sdk.core.TruvideoSdk
+import com.truvideo.sdk.media.TruvideoSdkMedia
 import kotlinx.coroutines.launch
+import truvideo.sdk.common.model.TruvideoSdkEnvironment
+import truvideo.sdk.common.sdk_common
 import truvideo.sdk.components.button.TruvideoButton
 import java.nio.charset.StandardCharsets
 import java.security.InvalidKeyException
@@ -38,7 +42,10 @@ class LoginActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             TruvideosdkmediaTheme {
-                Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
                     Content()
                 }
             }
@@ -48,15 +55,26 @@ class LoginActivity : ComponentActivity() {
     @Composable
     fun Content() {
         var apiKey by remember { mutableStateOf("VS2SG9WK") }
+//        var apiKey by remember { mutableStateOf("EPhPPsbv7e") }
         var secret by remember { mutableStateOf("ST2K33GR") }
+//        var secret by remember{ mutableStateOf("9lHCnkfeLl") }
         var isLoading by remember { mutableStateOf(false) }
         val context = LocalContext.current
         val scope = rememberCoroutineScope()
 
         LaunchedEffect(Unit) {
-            if(TruvideoSdk.isAuthenticated && !TruvideoSdk.isAuthenticationExpired){
-                val intent = Intent(context, MainActivity::class.java)
-                startActivity(intent)
+            TruvideoSdk.clear()
+            sdk_common.configuration.environment = TruvideoSdkEnvironment.RC
+            if (TruvideoSdk.isAuthenticated && !TruvideoSdk.isAuthenticationExpired) {
+                try {
+                    isLoading = true
+                    TruvideoSdk.init()
+                    val intent = Intent(context, MainActivity::class.java)
+                    startActivity(intent)
+                } catch (e: Exception) {
+                    isLoading = false
+                    e.printStackTrace()
+                }
             }
         }
 
@@ -72,14 +90,15 @@ class LoginActivity : ComponentActivity() {
                         signature = signature
                     )
 
+                    TruvideoSdk.init()
 
                     val intent = Intent(context, MainActivity::class.java)
                     startActivity(intent)
                 } catch (exception: Exception) {
+                    isLoading = false
                     exception.printStackTrace()
                 }
 
-                isLoading = false
             }
         }
 

@@ -7,6 +7,7 @@ import androidx.room.Ignore
 import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
 import com.truvideo.sdk.media.data.DatabaseConverters
+import com.truvideo.sdk.media.data.converters.MetadataConverter
 import com.truvideo.sdk.media.engines.TruvideoSdkMediaFileUploadEngine
 import com.truvideo.sdk.media.exception.TruvideoSdkMediaException
 import com.truvideo.sdk.media.interfaces.TruvideoSdkMediaCallback
@@ -21,9 +22,13 @@ data class TruvideoSdkMediaFileUploadRequest(
     @PrimaryKey val id: String,
     var filePath: String,
     var errorMessage: String? = null,
-    var mediaURL: String? = null,
+    var url: String? = null,
     var progress: Float? = null,
+    var transcriptionUrl: String? = null,
+    var transcriptionLength: Float? = null,
 
+    @TypeConverters(DatabaseConverters::class) var tags: Map<String, String> = mapOf(),
+    @TypeConverters(MetadataConverter::class) var metadata: Map<String, Any?> = mapOf(),
     @TypeConverters(DatabaseConverters::class) var status: TruvideoSdkMediaFileUploadStatus = TruvideoSdkMediaFileUploadStatus.IDLE,
     @TypeConverters(DatabaseConverters::class) val createdAt: Date = Date(),
     @TypeConverters(DatabaseConverters::class) var updatedAt: Date = Date(),

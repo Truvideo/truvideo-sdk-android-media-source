@@ -2,9 +2,7 @@ package com.truvideo.sdk.media.engines
 
 import android.content.Context
 import android.net.Uri
-import com.truvideo.sdk.media.exception.TruvideoSdkMediaException
 import com.truvideo.sdk.media.interfaces.FileUploadCallback
-import com.truvideo.sdk.media.interfaces.TruvideoSdkMedia
 import com.truvideo.sdk.media.interfaces.TruvideoSdkMediaFileUploadCallback
 import com.truvideo.sdk.media.model.TruvideoSdkMediaFileUploadStatus
 import com.truvideo.sdk.media.repository.TruvideoSdkMediaFileUploadRequestRepository
@@ -35,14 +33,14 @@ internal class TruvideoSdkMediaFileUploadEngine(
         // Get credentials
         val credentials = sdk_common.auth.settings.value?.credentials
         if (credentials == null) {
-            callback.onError(id, TruvideoSdkMediaException("Invalid credentials"))
+            callback.onError(id, TruvideoSdkException("Invalid credentials"))
             return
         }
 
         // Get entity
         val entity = repository.getById(id)
         if (entity == null) {
-            callback.onError(id, TruvideoSdkMediaException("File upload request not found"))
+            callback.onError(id, TruvideoSdkException("File upload request not found"))
             return
         }
 
@@ -62,7 +60,7 @@ internal class TruvideoSdkMediaFileUploadEngine(
         entity.externalId = null
         entity.errorMessage = null
         entity.progress = 0f
-        entity.mediaURL = null
+        entity.url = null
         entity.poolId = credentials.identityPoolID
         entity.region = credentials.region
         entity.bucketName = credentials.bucketName
@@ -126,21 +124,26 @@ internal class TruvideoSdkMediaFileUploadEngine(
                                     val file = File(entity.filePath)
                                     val mimeType = FileUriUtil.getMimeType(context, Uri.fromFile(file))
                                     val type = mimeType.split("/")[0].uppercase(Locale.ROOT)
-                                    val finalUrl = mediaService.createMedia(
+                                    val media = mediaService.createMedia(
                                         title = file.name,
                                         url = url,
                                         size = file.length(),
-                                        type = type
+                                        type = type,
+                                        tags = entity.tags,
+                                        metadata = entity.metadata
                                     )
 
                                     // Move to completed
-                                    repository.updateToCompleted(id, finalUrl)
-                                    callback.onComplete(entity.id, finalUrl)
+                                    repository.updateToCompleted(id, media)
+                                    val response = repository.getById(id)
+                                    if (response != null) {
+                                        callback.onComplete(entity.id, response)
+                                    }
                                 } catch (exception: Exception) {
                                     exception.printStackTrace()
 
                                     val message = if (exception is TruvideoSdkException) exception.message else "Unknown error"
-                                    val externalException = TruvideoSdkMediaException(message)
+                                    val externalException = TruvideoSdkException(message)
 
                                     // Move to error
                                     repository.updateToError(id, message)
@@ -167,7 +170,7 @@ internal class TruvideoSdkMediaFileUploadEngine(
             exception.printStackTrace()
 
             val message = if (exception is TruvideoSdkException) exception.message else "Unknown error"
-            val externalException = TruvideoSdkMediaException(message)
+            val externalException = TruvideoSdkException(message)
 
             // Move to error
             repository.updateToError(id, message)
@@ -203,7 +206,7 @@ internal class TruvideoSdkMediaFileUploadEngine(
 
         // Update to cancel
         entity.externalId = null
-        entity.mediaURL = null
+        entity.url = null
         entity.progress = null
         entity.errorMessage = null
         entity.status = TruvideoSdkMediaFileUploadStatus.CANCELED
