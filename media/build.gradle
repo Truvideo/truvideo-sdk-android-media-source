@@ -89,15 +89,15 @@ dependencies {
 
     // Common
     var commonVersion = properties.getProperty("commonVersion")
-    implementation("com.github.truvideo:truvideo-sdk-android-common:$commonVersion")
+    implementation("com.github.Truvideo:truvideo-sdk-android-common:$commonVersion")
 }
 
 project.afterEvaluate {
     publishing {
         publications {
             library(MavenPublication) {
-                setGroupId 'com.truvideo'
-                setArtifactId 'sdk-media'
+                setGroupId 'com.github.Truvideo'
+                setArtifactId 'truvideo-sdk-android-media-local'
                 version android.defaultConfig.versionName
 
                 def environment = properties.getProperty("environment")
