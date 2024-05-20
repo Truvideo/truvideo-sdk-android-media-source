@@ -1,7 +1,7 @@
 package com.truvideo.sdk.media.service.media
 
-import com.truvideo.sdk.media.interfaces.TruvideoSdkMediaAuthAdapter
 import com.google.gson.Gson
+import com.truvideo.sdk.media.interfaces.TruvideoSdkMediaAuthAdapter
 import com.truvideo.sdk.media.model.TruVideoSdkMediaFileUploadResponse
 import org.json.JSONObject
 import truvideo.sdk.common.exception.TruvideoSdkException
@@ -55,7 +55,5 @@ internal class TruvideoSdkMediaServiceImpl(
         }
 
         return Gson().fromJson(response.body, TruVideoSdkMediaFileUploadResponse::class.java)
-
-
     }
 }

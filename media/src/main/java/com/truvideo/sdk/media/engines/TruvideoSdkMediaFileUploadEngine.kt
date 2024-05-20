@@ -2,9 +2,7 @@ package com.truvideo.sdk.media.engines
 
 import android.content.Context
 import android.net.Uri
-import com.truvideo.sdk.media.exception.TruvideoSdkMediaException
 import com.truvideo.sdk.media.interfaces.FileUploadCallback
-import com.truvideo.sdk.media.interfaces.TruvideoSdkMedia
 import com.truvideo.sdk.media.interfaces.TruvideoSdkMediaFileUploadCallback
 import com.truvideo.sdk.media.model.TruvideoSdkMediaFileUploadStatus
 import com.truvideo.sdk.media.repository.TruvideoSdkMediaFileUploadRequestRepository
@@ -62,7 +60,7 @@ internal class TruvideoSdkMediaFileUploadEngine(
         entity.externalId = null
         entity.errorMessage = null
         entity.progress = 0f
-        entity.mediaURL = null
+        entity.url = null
         entity.poolId = credentials.identityPoolID
         entity.region = credentials.region
         entity.bucketName = credentials.bucketName
@@ -126,7 +124,7 @@ internal class TruvideoSdkMediaFileUploadEngine(
                                     val file = File(entity.filePath)
                                     val mimeType = FileUriUtil.getMimeType(context, Uri.fromFile(file))
                                     val type = mimeType.split("/")[0].uppercase(Locale.ROOT)
-                                    val finalResponse = mediaService.createMedia(
+                                    val media = mediaService.createMedia(
                                         title = file.name,
                                         url = url,
                                         size = file.length(),
@@ -136,7 +134,7 @@ internal class TruvideoSdkMediaFileUploadEngine(
                                     )
 
                                     // Move to completed
-                                    repository.updateToCompleted(id, finalResponse)
+                                    repository.updateToCompleted(id, media)
                                     val response = repository.getById(id)
                                     if (response != null) {
                                         callback.onComplete(entity.id, response)
@@ -208,7 +206,7 @@ internal class TruvideoSdkMediaFileUploadEngine(
 
         // Update to cancel
         entity.externalId = null
-        entity.mediaURL = null
+        entity.url = null
         entity.progress = null
         entity.errorMessage = null
         entity.status = TruvideoSdkMediaFileUploadStatus.CANCELED

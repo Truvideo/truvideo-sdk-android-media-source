@@ -8,9 +8,7 @@ pluginManagement {
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
-        maven {
-            url 'https://jitpack.io'
-        }
+        maven {url 'https://jitpack.io'}
         google()
         mavenCentral()
         mavenLocal()
@@ -18,4 +16,4 @@ dependencyResolutionManagement {
 }
 rootProject.name = "truvideo.sdk.media"
 include ':media'
-include ':app'
+//include ':app'

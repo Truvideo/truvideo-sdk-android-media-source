@@ -18,7 +18,7 @@ internal class UploadFileUseCase(
     private val s3ClientUseCase: S3ClientUseCase
 ) {
 
-    suspend operator fun invoke(
+    operator fun invoke(
         filePath: String,
         bucketName: String,
         region: String,

@@ -37,6 +37,7 @@
             android:exported="true"
             android:label="@string/app_name"
             android:theme="@style/Theme.Truvideosdkmedia" />
+
     </application>
 
 </manifest>

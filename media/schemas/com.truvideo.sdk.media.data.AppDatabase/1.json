@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "1669d1facadbcbe479060f67d5db464e",
+    "identityHash": "a3706ed762be2b5b6d8d2ba37765ece0",
     "entities": [
       {
         "tableName": "FileUploadRequest",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `progress` REAL, `errorMessage` TEXT, `mediaURL` TEXT, `filePath` TEXT NOT NULL, `status` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, `externalId` INTEGER, `bucketName` TEXT NOT NULL, `region` TEXT NOT NULL, `poolId` TEXT NOT NULL, `folder` TEXT NOT NULL, PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `filePath` TEXT NOT NULL, `errorMessage` TEXT, `url` TEXT, `progress` REAL, `transcriptionUrl` TEXT, `transcriptionLength` REAL, `tags` TEXT NOT NULL, `metadata` TEXT NOT NULL, `status` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, `externalId` INTEGER, `bucketName` TEXT NOT NULL, `region` TEXT NOT NULL, `poolId` TEXT NOT NULL, `folder` TEXT NOT NULL, PRIMARY KEY(`id`))",
         "fields": [
           {
             "fieldPath": "id",
@@ -15,10 +15,10 @@
             "notNull": true
           },
           {
-            "fieldPath": "progress",
-            "columnName": "progress",
-            "affinity": "REAL",
-            "notNull": false
+            "fieldPath": "filePath",
+            "columnName": "filePath",
+            "affinity": "TEXT",
+            "notNull": true
           },
           {
             "fieldPath": "errorMessage",
@@ -27,14 +27,38 @@
             "notNull": false
           },
           {
-            "fieldPath": "mediaURL",
-            "columnName": "mediaURL",
+            "fieldPath": "url",
+            "columnName": "url",
             "affinity": "TEXT",
             "notNull": false
           },
           {
-            "fieldPath": "filePath",
-            "columnName": "filePath",
+            "fieldPath": "progress",
+            "columnName": "progress",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "transcriptionUrl",
+            "columnName": "transcriptionUrl",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "transcriptionLength",
+            "columnName": "transcriptionLength",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "tags",
+            "columnName": "tags",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "metadata",
+            "columnName": "metadata",
             "affinity": "TEXT",
             "notNull": true
           },
@@ -100,7 +124,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '1669d1facadbcbe479060f67d5db464e')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'a3706ed762be2b5b6d8d2ba37765ece0')"
     ]
   }
 }

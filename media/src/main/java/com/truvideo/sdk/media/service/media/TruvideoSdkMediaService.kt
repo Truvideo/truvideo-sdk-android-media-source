@@ -9,6 +9,6 @@ internal interface TruvideoSdkMediaService {
         size: Long,
         type: String,
         tags: Map<String, String>,
-        metadata: Map<String, Any?>,
+        metadata: Map<String, Any?>
     ): TruVideoSdkMediaFileUploadResponse
 }

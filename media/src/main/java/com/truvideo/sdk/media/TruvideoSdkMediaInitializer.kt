@@ -12,30 +12,37 @@ import com.truvideo.sdk.media.usecases.UploadFileUseCase
 
 @Suppress("unused")
 class TruvideoSdkMediaInitializer : Initializer<Unit> {
-    override fun create(context: Context) {
-        val versionPropertiesAdapter = VersionPropertiesAdapter(context)
-        val authAdapter = AuthAdapterImpl(versionPropertiesAdapter)
-        val mediaFileUploadRequestRepository = TruvideoSdkMediaFileUploadRequestRepositoryImpl(context)
-        val s3ClientUseCase = S3ClientUseCase(context)
-        val mediaService = TruvideoSdkMediaServiceImpl(
-            authAdapter = authAdapter
-        )
-        val uploadFileUseCase = UploadFileUseCase(
-            context = context,
-            s3ClientUseCase = s3ClientUseCase
-        )
-        val fileUploadEngine = TruvideoSdkMediaFileUploadEngine(
-            context = context,
-            uploadFileUseCase = uploadFileUseCase,
-            repository = mediaFileUploadRequestRepository,
-            mediaService = mediaService
-        )
 
-        TruvideoSdkMedia = TruvideoSdkMediaImpl(
-            authAdapter = authAdapter,
-            mediaFileUploadRequestRepository = mediaFileUploadRequestRepository,
-            fileUploadEngine = fileUploadEngine,
-        )
+    companion object {
+        fun init(context: Context) {
+            val versionPropertiesAdapter = VersionPropertiesAdapter(context)
+            val authAdapter = AuthAdapterImpl(versionPropertiesAdapter)
+            val mediaFileUploadRequestRepository = TruvideoSdkMediaFileUploadRequestRepositoryImpl(context)
+            val s3ClientUseCase = S3ClientUseCase(context)
+            val mediaService = TruvideoSdkMediaServiceImpl(
+                authAdapter = authAdapter
+            )
+            val uploadFileUseCase = UploadFileUseCase(
+                context = context,
+                s3ClientUseCase = s3ClientUseCase
+            )
+            val fileUploadEngine = TruvideoSdkMediaFileUploadEngine(
+                context = context,
+                uploadFileUseCase = uploadFileUseCase,
+                repository = mediaFileUploadRequestRepository,
+                mediaService = mediaService
+            )
+
+            TruvideoSdkMedia = TruvideoSdkMediaImpl(
+                authAdapter = authAdapter,
+                mediaFileUploadRequestRepository = mediaFileUploadRequestRepository,
+                fileUploadEngine = fileUploadEngine,
+            )
+        }
+    }
+
+    override fun create(context: Context) {
+        init(context)
     }
 
     override fun dependencies(): MutableList<Class<out Initializer<*>>> {

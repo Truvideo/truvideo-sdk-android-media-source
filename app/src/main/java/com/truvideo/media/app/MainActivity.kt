@@ -36,13 +36,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.truvideo.media.app.ui.theme.TruvideosdkmediaTheme
 import com.truvideo.media.app.utils.RealPathUtil
-import com.truvideo.sdk.core.TruvideoSdk
 import com.truvideo.sdk.media.TruvideoSdkMedia
 import com.truvideo.sdk.media.interfaces.TruvideoSdkMediaFileUploadCallback
 import com.truvideo.sdk.media.model.TruvideoSdkMediaFileUploadRequest
@@ -111,11 +111,22 @@ class MainActivity : ComponentActivity() {
             if (file.exists()) {
                 scope.launch {
                     val builder = TruvideoSdkMedia.FileUploadRequestBuilder(path)
-                    builder.addMetadata(mapOf(
-                        "hello" to 1,
-                        "world" to 2,
-                    ))
+
                     builder.addTag("MyTag", "this is my tag")
+                    builder.addTag("key", "value")
+                    builder.addTag("color", "red")
+                    builder.addTag("order-id", "123")
+
+                    val metadata = mapOf(
+                        "key" to "value",
+                        "key2" to 2,
+                        "nested" to mapOf(
+                            "key3" to 3,
+                            "key4" to "value4"
+                        )
+                    )
+
+                    builder.addMetadata(metadata)
                     builder.build()
                 }
             } else {
@@ -155,15 +166,52 @@ class MainActivity : ComponentActivity() {
                                 Text(it.id, fontSize = 10.sp, modifier = Modifier.weight(1f))
                                 Text(it.status.name)
                             }
-                            Text("Created at: ${it.createdAt}", fontSize = 10.sp)
-                            Text("Updated at: ${it.updatedAt}", fontSize = 10.sp)
+                            Text("Created At", fontSize = 10.sp, fontWeight = FontWeight.W500)
+                            Text("${it.createdAt}", fontSize = 10.sp)
+
+                            Text("Updated At", fontSize = 10.sp, fontWeight = FontWeight.W500)
+                            Text("${it.updatedAt}", fontSize = 10.sp)
 
                             if (it.progress != null) {
-                                Text("Progress: ${(it.progress!! * 100)}%", fontSize = 10.sp)
+                                Text("Progress", fontSize = 10.sp, fontWeight = FontWeight.W500)
+                                Text("${(it.progress!! * 100)}%", fontSize = 10.sp)
                             }
 
-                            if (it.mediaURL != null) {
-                                Text("URL: ${it.mediaURL}", fontSize = 10.sp)
+                            if (it.url != null) {
+                                Text("URL", fontSize = 10.sp, fontWeight = FontWeight.W500)
+                                Text("${it.url}", fontSize = 10.sp)
+                            }
+
+                            if (it.transcriptionUrl != null) {
+                                Text("Transcription URL", fontSize = 10.sp, fontWeight = FontWeight.W500)
+                                Text("${it.transcriptionUrl}", fontSize = 10.sp)
+                            }
+
+                            if (it.tags.entries.isNotEmpty()) {
+                                Text("Tags", fontSize = 10.sp, fontWeight = FontWeight.W500)
+                                it.tags.entries.forEach {
+                                    Text("${it.key} = ${it.value}", fontSize = 10.sp)
+                                }
+                            }
+
+                            if (it.metadata.entries.isNotEmpty()) {
+
+
+                                Text("Metadata", fontSize = 10.sp, fontWeight = FontWeight.W500)
+                                it.metadata.entries.forEach {
+                                    if (it.value is Map<*, *>) {
+                                        Text("${it.key} = ", fontSize = 10.sp)
+                                        (it.value as Map<*, *>).entries.forEach { nested ->
+                                            Text(
+                                                "${nested.key} = ${nested.value}",
+                                                fontSize = 10.sp,
+                                                modifier = Modifier.padding(start = 8.dp)
+                                            )
+                                        }
+                                    } else {
+                                        Text("${it.key} = ${it.value}", fontSize = 10.sp)
+                                    }
+                                }
                             }
 
                             Row(
@@ -184,6 +232,9 @@ class MainActivity : ComponentActivity() {
                                                             response: TruvideoSdkMediaFileUploadRequest
                                                         ) {
                                                             Log.d("TruvideoSdkMedia", "$id Complete")
+                                                            response.tags.entries.forEach {
+                                                                Log.d("TruvideoSdkMedia", "${it.key} = ${it.value}")
+                                                            }
                                                         }
 
                                                         override fun onProgressChanged(
