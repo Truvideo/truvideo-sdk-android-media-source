@@ -6,8 +6,10 @@ import androidx.room.Entity
 import androidx.room.Ignore
 import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
-import com.truvideo.sdk.media.data.DatabaseConverters
+import com.truvideo.sdk.media.data.converters.DateConverter
 import com.truvideo.sdk.media.data.converters.MetadataConverter
+import com.truvideo.sdk.media.data.converters.TagsConverter
+import com.truvideo.sdk.media.data.converters.TruvideoSdkMediaFileUploadStatusConverter
 import com.truvideo.sdk.media.engines.TruvideoSdkMediaFileUploadEngine
 import com.truvideo.sdk.media.exception.TruvideoSdkMediaException
 import com.truvideo.sdk.media.interfaces.TruvideoSdkMediaCallback
@@ -27,11 +29,11 @@ data class TruvideoSdkMediaFileUploadRequest(
     var transcriptionUrl: String? = null,
     var transcriptionLength: Float? = null,
 
-    @TypeConverters(DatabaseConverters::class) var tags: Map<String, String> = mapOf(),
+    @TypeConverters(TagsConverter::class) var tags: Map<String, String> = mapOf(),
     @TypeConverters(MetadataConverter::class) var metadata: Map<String, Any?> = mapOf(),
-    @TypeConverters(DatabaseConverters::class) var status: TruvideoSdkMediaFileUploadStatus = TruvideoSdkMediaFileUploadStatus.IDLE,
-    @TypeConverters(DatabaseConverters::class) val createdAt: Date = Date(),
-    @TypeConverters(DatabaseConverters::class) var updatedAt: Date = Date(),
+    @TypeConverters(TruvideoSdkMediaFileUploadStatusConverter::class) var status: TruvideoSdkMediaFileUploadStatus = TruvideoSdkMediaFileUploadStatus.IDLE,
+    @TypeConverters(DateConverter::class) val createdAt: Date = Date(),
+    @TypeConverters(DateConverter::class) var updatedAt: Date = Date(),
 
     internal var externalId: Int? = null,
     internal var bucketName: String = "",

@@ -9,12 +9,12 @@ import com.truvideo.sdk.media.model.TruvideoSdkMediaFileUploadRequest;
 
 import java.util.Map;
 
-import truvideo.sdk.common.exception.TruvideoSdkException;
 
 class ExampleFileUploadJava {
 
     private void uploadFile(String filePath) {
         // Create file upload request builder
+
         final TruvideoSdkMediaFileUploadRequestBuilder builder = TruvideoSdkMedia.getInstance().FileUploadRequestBuilder(filePath);
         builder.addTag("key", "value");
         builder.addTag("color", "red");

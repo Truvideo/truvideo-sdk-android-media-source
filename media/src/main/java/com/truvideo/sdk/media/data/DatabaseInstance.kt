@@ -1,7 +1,6 @@
 package com.truvideo.sdk.media.data
 
 import android.content.Context
-import androidx.room.AutoMigration
 import androidx.room.Room
 
 internal object DatabaseInstance {

@@ -1,6 +1,7 @@
 package com.truvideo.sdk.media.service.media
 
-import com.google.gson.Gson
+import com.truvideo.sdk.media.data.converters.MetadataConverter
+import com.truvideo.sdk.media.exception.TruvideoSdkMediaException
 import com.truvideo.sdk.media.interfaces.TruvideoSdkMediaAuthAdapter
 import com.truvideo.sdk.media.model.TruVideoSdkMediaFileUploadResponse
 import org.json.JSONObject
@@ -11,7 +12,6 @@ import truvideo.sdk.common.sdk_common
 internal class TruvideoSdkMediaServiceImpl(
     private val authAdapter: TruvideoSdkMediaAuthAdapter
 ) : TruvideoSdkMediaService {
-
 
     override suspend fun createMedia(
         title: String,
@@ -39,7 +39,7 @@ internal class TruvideoSdkMediaServiceImpl(
             put("resolution", "LOW")
             put("size", size)
             put("tags", JSONObject().apply { for (tag in tags) put(tag.key, tag.value) })
-            put("metadata", Gson().toJson(metadata))
+            put("metadata", MetadataConverter().fromMap(metadata))
         }
 
         val baseUrl = sdk_common.configuration.environment.baseUrl
@@ -54,6 +54,11 @@ internal class TruvideoSdkMediaServiceImpl(
             throw TruvideoSdkException("Error creating media")
         }
 
-        return Gson().fromJson(response.body, TruVideoSdkMediaFileUploadResponse::class.java)
+        try {
+            return TruVideoSdkMediaFileUploadResponse.fromJson(response.body)
+        } catch (exception: Exception) {
+            exception.printStackTrace()
+            throw TruvideoSdkMediaException("Error parsing media response")
+        }
     }
 }

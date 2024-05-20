@@ -2,7 +2,6 @@ package com.truvideo.media.app
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Box
@@ -26,7 +25,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.truvideo.media.app.ui.theme.TruvideosdkmediaTheme
 import com.truvideo.sdk.core.TruvideoSdk
-import com.truvideo.sdk.media.TruvideoSdkMedia
 import kotlinx.coroutines.launch
 import truvideo.sdk.common.model.TruvideoSdkEnvironment
 import truvideo.sdk.common.sdk_common
@@ -54,17 +52,17 @@ class LoginActivity : ComponentActivity() {
 
     @Composable
     fun Content() {
-        var apiKey by remember { mutableStateOf("VS2SG9WK") }
-//        var apiKey by remember { mutableStateOf("EPhPPsbv7e") }
-        var secret by remember { mutableStateOf("ST2K33GR") }
-//        var secret by remember{ mutableStateOf("9lHCnkfeLl") }
+//        var apiKey by remember { mutableStateOf("VS2SG9WK") }
+        var apiKey by remember { mutableStateOf("EPhPPsbv7e") }
+//        var secret by remember { mutableStateOf("ST2K33GR") }
+        var secret by remember{ mutableStateOf("9lHCnkfeLl") }
         var isLoading by remember { mutableStateOf(false) }
         val context = LocalContext.current
         val scope = rememberCoroutineScope()
 
         LaunchedEffect(Unit) {
             TruvideoSdk.clear()
-            sdk_common.configuration.environment = TruvideoSdkEnvironment.RC
+            sdk_common.configuration.environment = TruvideoSdkEnvironment.PROD
             if (TruvideoSdk.isAuthenticated && !TruvideoSdk.isAuthenticationExpired) {
                 try {
                     isLoading = true

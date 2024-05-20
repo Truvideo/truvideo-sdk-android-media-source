@@ -1,6 +1,5 @@
 package com.truvideo.sdk.media.builder
 
-import com.google.gson.Gson
 import com.truvideo.sdk.media.engines.TruvideoSdkMediaEngine
 import com.truvideo.sdk.media.engines.TruvideoSdkMediaFileUploadEngine
 import com.truvideo.sdk.media.exception.TruvideoSdkMediaException

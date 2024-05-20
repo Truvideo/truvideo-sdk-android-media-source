@@ -2,10 +2,9 @@ package com.truvideo.sdk.media.repository
 
 import android.content.Context
 import androidx.lifecycle.LiveData
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import com.truvideo.sdk.media.data.DatabaseInstance
 import com.truvideo.sdk.media.data.FileUploadRequestDAO
+import com.truvideo.sdk.media.data.converters.MetadataConverter
 import com.truvideo.sdk.media.model.TruVideoSdkMediaFileUploadResponse
 import com.truvideo.sdk.media.model.TruvideoSdkMediaFileUploadRequest
 import com.truvideo.sdk.media.model.TruvideoSdkMediaFileUploadStatus
@@ -125,24 +124,17 @@ internal class TruvideoSdkMediaFileUploadRequestRepositoryImpl(
         update(model)
     }
 
-    override suspend fun updateToCompleted(id: String, response: TruVideoSdkMediaFileUploadResponse) {
+    override suspend fun updateToCompleted(id: String, media: TruVideoSdkMediaFileUploadResponse) {
         val model = getById(id) ?: return
 
         model.progress = 1.0f
         model.errorMessage = null
-        model.url = response.url
-        model.tags = response.tags as MutableMap<String, String>
-
-        val metadata = try {
-            Gson().fromJson(response.metadata, object : TypeToken<Map<String, Any?>>() {}.type)
-        } catch (ex: Exception) {
-            mapOf<String, Any?>()
-        }
-
-        model.metadata = metadata
+        model.url = media.url
+        model.tags = media.tags as MutableMap<String, String>
+        model.metadata = MetadataConverter().toMap(media.metadata) ?: mapOf()
         model.status = TruvideoSdkMediaFileUploadStatus.COMPLETED
-        model.transcriptionUrl = response.transcriptionUrl
-        model.transcriptionLength = response.transcriptionLength
+        model.transcriptionUrl = media.transcriptionUrl
+        model.transcriptionLength = media.transcriptionLength
         update(model)
     }
 
