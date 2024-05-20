@@ -2,6 +2,7 @@ package com.truvideo.sdk.media.usecases
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferListener
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferState
 import com.amazonaws.services.s3.model.CannedAccessControlList

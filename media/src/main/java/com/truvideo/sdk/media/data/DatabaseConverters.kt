@@ -1,13 +1,17 @@
 package com.truvideo.sdk.media.data
 
-import android.net.Uri
 import androidx.room.TypeConverter
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import com.truvideo.sdk.media.model.TruvideoSdkMediaFileUploadStatus
+import com.truvideo.sdk.media.util.toJsonElement
+import com.truvideo.sdk.media.util.toMapAnyFromJson
+import com.truvideo.sdk.media.util.toMapStringFromJson
+import kotlinx.serialization.json.Json
 import java.util.Date
 
 internal class DatabaseConverters {
+
+    private val json = Json { encodeDefaults = true }
+
     @TypeConverter
     fun fromStatus(status: TruvideoSdkMediaFileUploadStatus): String {
         return status.name
@@ -29,15 +33,26 @@ internal class DatabaseConverters {
     }
 
     @TypeConverter
-    fun fromMap(map:  MutableMap<String, String>?): String? {
+    fun fromMap(map:  Map<String, String>?): String? {
         if (map == null) return null
-        return Gson().toJson(map)
+        return map.toJsonElement().toString()
     }
 
     @TypeConverter
-    fun toMap(json: String?): MutableMap<String, String>? {
+    fun toMap(json: String?): Map<String, String>? {
         if (json == null) return null
-        return Gson().fromJson(json, object: TypeToken<MutableMap<String, String>>() {}.type)
+        return json.toMapStringFromJson()
     }
 
+    @TypeConverter
+    fun fromMapAny(map:  Map<String, Any?>?): String? {
+        if (map == null) return null
+        return map.toJsonElement().toString()
+    }
+
+    @TypeConverter
+    fun toMapAny(mapString: String?): Map<String, Any?>? {
+        if (mapString == null) return null
+        return mapString.toMapAnyFromJson()
+    }
 }

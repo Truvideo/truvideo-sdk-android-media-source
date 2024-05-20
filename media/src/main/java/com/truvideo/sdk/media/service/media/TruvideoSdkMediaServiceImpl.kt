@@ -18,7 +18,8 @@ internal class TruvideoSdkMediaServiceImpl(
         url: String,
         size: Long,
         type: String,
-        tags: Map<String, String>
+        tags: Map<String, String>,
+        metadata: Map<String,Any?>
     ): TruVideoSdkMediaFileUploadResponse {
         authAdapter.validateAuthentication()
         authAdapter.refresh()
@@ -38,6 +39,7 @@ internal class TruvideoSdkMediaServiceImpl(
             put("resolution", "LOW")
             put("size", size)
             put("tags", JSONObject().apply { for (tag in tags) put(tag.key, tag.value) })
+            put("metadata", JSONObject().apply { for (m in metadata) put(m.key, m.value) }.toString())
         }
 
         val baseUrl = sdk_common.configuration.environment.baseUrl

@@ -27,7 +27,8 @@ data class TruvideoSdkMediaFileUploadRequest(
     var transcriptionUrl: String? = null,
     var transcriptionLength: Float? = null,
 
-    @TypeConverters(DatabaseConverters::class) var tags: MutableMap<String, String> = mutableMapOf(),
+    @TypeConverters(DatabaseConverters::class) var tags: Map<String, String> = mutableMapOf(),
+    @TypeConverters(DatabaseConverters::class) var metadata: Map<String, Any?> = mapOf(),
     @TypeConverters(DatabaseConverters::class) var status: TruvideoSdkMediaFileUploadStatus = TruvideoSdkMediaFileUploadStatus.IDLE,
     @TypeConverters(DatabaseConverters::class) val createdAt: Date = Date(),
     @TypeConverters(DatabaseConverters::class) var updatedAt: Date = Date(),

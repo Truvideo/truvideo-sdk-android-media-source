@@ -111,6 +111,11 @@ class MainActivity : ComponentActivity() {
             if (file.exists()) {
                 scope.launch {
                     val builder = TruvideoSdkMedia.FileUploadRequestBuilder(path)
+                    builder.addMetadata(mapOf(
+                        "hello" to 1,
+                        "world" to 2,
+                    ))
+                    builder.addTag("MyTag", "this is my tag")
                     builder.build()
                 }
             } else {

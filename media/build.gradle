@@ -3,6 +3,7 @@ plugins {
     id 'org.jetbrains.kotlin.android'
     id 'maven-publish'
     id 'com.google.devtools.ksp'
+    id 'org.jetbrains.kotlin.plugin.serialization'
 }
 
 def propertiesFile = rootProject.file("media/src/main/assets/version.properties")
@@ -69,7 +70,7 @@ dependencies {
     implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.7.0'
     implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.7.0'
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
-
+    testImplementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
 
     // S3
     implementation 'com.amazonaws:aws-android-sdk-mobile-client:2.16.6'

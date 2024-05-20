@@ -131,7 +131,8 @@ internal class TruvideoSdkMediaFileUploadEngine(
                                         url = url,
                                         size = file.length(),
                                         type = type,
-                                        tags = entity.tags
+                                        tags = entity.tags,
+                                        metadata = entity.metadata
                                     )
 
                                     // Move to completed
