@@ -23,7 +23,7 @@ class LoginActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         TruvideoSdk.clear()
-        sdk_common.configuration.environment = TruvideoSdkEnvironment.RC
+        sdk_common.configuration.environment = TruvideoSdkEnvironment.PROD
 
         setContent {
             TruvideosdkmediaTheme {
@@ -40,10 +40,10 @@ class LoginActivity : ComponentActivity() {
     @Composable
     fun Content() {
         val activity = this
-        val apiKey = "VS2SG9WK"
-        val secret = "ST2K33GR"
-//        val apiKey = "EPhPPsbv7e"
-//        val secret = "9lHCnkfeLl"
+//        val apiKey = "VS2SG9WK"
+//        val secret = "ST2K33GR"
+        val apiKey = "EPhPPsbv7e"
+        val secret = "9lHCnkfeLl"
 
         Box(
             Modifier
