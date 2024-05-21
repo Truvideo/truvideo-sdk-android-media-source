@@ -10,15 +10,10 @@ import com.amazonaws.regions.Region
 import com.amazonaws.regions.Regions
 import com.amazonaws.services.s3.AmazonS3Client
 import com.amazonaws.services.s3.S3ClientOptions
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 
 internal class S3ClientUseCase(
     private val context: Context
 ) {
-
-    private val scope = CoroutineScope(Dispatchers.IO)
-
     fun getClient(
         region: String,
         poolId: String,

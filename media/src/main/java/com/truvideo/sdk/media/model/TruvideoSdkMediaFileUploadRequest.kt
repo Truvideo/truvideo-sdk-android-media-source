@@ -24,8 +24,9 @@ data class TruvideoSdkMediaFileUploadRequest(
     @PrimaryKey val id: String,
     var filePath: String,
     var errorMessage: String? = null,
-    var url: String? = null,
-    var progress: Float? = null,
+    var remoteId: String? = null,
+    var remoteUrl: String? = null,
+    var uploadProgress: Float? = null,
     var transcriptionUrl: String? = null,
     var transcriptionLength: Float? = null,
 
@@ -128,5 +129,4 @@ data class TruvideoSdkMediaFileUploadRequest(
             }
         }
     }
-
 }

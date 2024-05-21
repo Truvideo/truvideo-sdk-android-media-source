@@ -20,7 +20,7 @@ private class TestKotlin {
         request.upload(object : TruvideoSdkMediaFileUploadCallback {
             override fun onComplete(id: String, response: TruvideoSdkMediaFileUploadRequest) {
                 // Handle completion
-                val url = response.url
+                val url = response.remoteUrl
                 val transcriptionURL = response.transcriptionUrl
                 val tags = response.tags
             }

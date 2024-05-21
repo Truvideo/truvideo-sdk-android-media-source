@@ -38,7 +38,7 @@ internal class TruvideoSdkMediaFileUploadEngine(
         }
 
         // Get entity
-        val entity = repository.getById(id)
+        var entity = repository.getById(id)
         if (entity == null) {
             callback.onError(id, TruvideoSdkException("File upload request not found"))
             return
@@ -56,16 +56,13 @@ internal class TruvideoSdkMediaFileUploadEngine(
         }
 
         // Update to uploading
-        entity.status = TruvideoSdkMediaFileUploadStatus.UPLOADING
-        entity.externalId = null
-        entity.errorMessage = null
-        entity.progress = 0f
-        entity.url = null
-        entity.poolId = credentials.identityPoolID
-        entity.region = credentials.region
-        entity.bucketName = credentials.bucketName
-        entity.folder = credentials.bucketFolderMedia
-        repository.update(entity)
+        entity = repository.updateToUploading(
+            entity.id,
+            poolId = credentials.identityPoolID,
+            region = credentials.region,
+            bucketName = credentials.bucketName,
+            folder = credentials.bucketFolderMedia
+        )
 
         try {
             val s3Id = uploadFileUseCase(
@@ -78,35 +75,9 @@ internal class TruvideoSdkMediaFileUploadEngine(
                     override fun onStateChanged(uploadId: Int, state: TruvideoSdkMediaFileUploadStatus, ex: TruvideoSdkException?) {
                         scope.launch {
                             mutex.withLock {
-                                when (state) {
-                                    TruvideoSdkMediaFileUploadStatus.IDLE -> {
-                                        repository.updateToIdle(id)
-                                    }
-
-                                    TruvideoSdkMediaFileUploadStatus.UPLOADING -> {
-                                        repository.updateToUploading(id)
-                                    }
-
-                                    TruvideoSdkMediaFileUploadStatus.SYNCHRONIZING -> {
-                                        repository.updateToSynchronizing(id)
-                                    }
-
-                                    TruvideoSdkMediaFileUploadStatus.ERROR -> {
-                                        val errorMessage = ex?.localizedMessage ?: "Unknown error"
-                                        repository.updateToError(id, errorMessage)
-                                    }
-
-                                    TruvideoSdkMediaFileUploadStatus.COMPLETED -> {
-
-                                    }
-
-                                    TruvideoSdkMediaFileUploadStatus.PAUSED -> {
-                                        repository.updateToPaused(id)
-                                    }
-
-                                    TruvideoSdkMediaFileUploadStatus.CANCELED -> {
-                                        repository.updateToCanceled(id)
-                                    }
+                                if (state == TruvideoSdkMediaFileUploadStatus.ERROR) {
+                                    val errorMessage = ex?.localizedMessage ?: "Unknown error"
+                                    repository.updateToError(id, errorMessage)
                                 }
                             }
                         }
@@ -205,12 +176,7 @@ internal class TruvideoSdkMediaFileUploadEngine(
         }
 
         // Update to cancel
-        entity.externalId = null
-        entity.url = null
-        entity.progress = null
-        entity.errorMessage = null
-        entity.status = TruvideoSdkMediaFileUploadStatus.CANCELED
-        repository.update(entity)
+        repository.updateToCanceled(entity.id)
     }
 
     suspend fun delete(id: String) {

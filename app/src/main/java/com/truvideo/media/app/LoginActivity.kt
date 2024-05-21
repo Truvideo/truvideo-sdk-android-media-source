@@ -14,14 +14,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.truvideo.media.app.ui.theme.TruvideosdkmediaTheme
 import com.truvideo.sdk.core.TruvideoSdk
+import truvideo.sdk.common.model.TruvideoSdkEnvironment
+import truvideo.sdk.common.sdk_common
 import truvideo.sdk.components.login.TruvideoLoginComponent
 
 class LoginActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-//        TruvideoSdk.clear()
-//        sdk_common.configuration.environment = TruvideoSdkEnvironment.RC
+        TruvideoSdk.clear()
+        sdk_common.configuration.environment = TruvideoSdkEnvironment.RC
 
         setContent {
             TruvideosdkmediaTheme {

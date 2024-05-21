@@ -7,13 +7,19 @@ import com.truvideo.sdk.media.model.TruvideoSdkMediaFileUploadStatus
 
 interface TruvideoSdkMediaFileUploadRequestRepository {
 
-    suspend fun insert(media: TruvideoSdkMediaFileUploadRequest)
+    suspend fun insert(media: TruvideoSdkMediaFileUploadRequest): TruvideoSdkMediaFileUploadRequest
 
-    suspend fun update(media: TruvideoSdkMediaFileUploadRequest)
+    suspend fun update(media: TruvideoSdkMediaFileUploadRequest): TruvideoSdkMediaFileUploadRequest
 
-    suspend fun updateToIdle(id: String)
+    suspend fun updateToIdle(id: String): TruvideoSdkMediaFileUploadRequest
 
-    suspend fun updateToUploading(id: String)
+    suspend fun updateToUploading(
+        id: String,
+        poolId: String,
+        region: String,
+        bucketName: String,
+        folder: String
+    ): TruvideoSdkMediaFileUploadRequest
 
     suspend fun updateToSynchronizing(id: String)
 

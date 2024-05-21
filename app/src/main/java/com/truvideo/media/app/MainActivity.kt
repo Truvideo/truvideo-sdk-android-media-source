@@ -164,20 +164,26 @@ class MainActivity : ComponentActivity() {
                                 Text(it.id, fontSize = 10.sp, modifier = Modifier.weight(1f))
                                 Text(it.status.name)
                             }
+
                             Text("Created At", fontSize = 10.sp, fontWeight = FontWeight.W500)
                             Text("${it.createdAt}", fontSize = 10.sp)
 
                             Text("Updated At", fontSize = 10.sp, fontWeight = FontWeight.W500)
                             Text("${it.updatedAt}", fontSize = 10.sp)
 
-                            if (it.progress != null) {
+                            if (it.uploadProgress != null) {
                                 Text("Progress", fontSize = 10.sp, fontWeight = FontWeight.W500)
-                                Text("${(it.progress!! * 100)}%", fontSize = 10.sp)
+                                Text("${(it.uploadProgress!! * 100)}%", fontSize = 10.sp)
                             }
 
-                            if (it.url != null) {
-                                Text("URL", fontSize = 10.sp, fontWeight = FontWeight.W500)
-                                Text("${it.url}", fontSize = 10.sp)
+                            if (it.remoteId != null) {
+                                Text("Remote ID", fontSize = 10.sp, fontWeight = FontWeight.W500)
+                                Text("${it.remoteId}", fontSize = 10.sp)
+                            }
+
+                            if (it.remoteUrl != null) {
+                                Text("Remote URL", fontSize = 10.sp, fontWeight = FontWeight.W500)
+                                Text("${it.remoteUrl}", fontSize = 10.sp)
                             }
 
                             if (it.transcriptionUrl != null) {
@@ -193,8 +199,6 @@ class MainActivity : ComponentActivity() {
                             }
 
                             if (it.metadata.entries.isNotEmpty()) {
-
-
                                 Text("Metadata", fontSize = 10.sp, fontWeight = FontWeight.W500)
                                 it.metadata.entries.forEach {
                                     if (it.value is Map<*, *>) {

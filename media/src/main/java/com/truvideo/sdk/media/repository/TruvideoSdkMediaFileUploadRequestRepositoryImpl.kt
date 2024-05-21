@@ -1,10 +1,12 @@
 package com.truvideo.sdk.media.repository
 
 import android.content.Context
+import android.util.Log
 import androidx.lifecycle.LiveData
 import com.truvideo.sdk.media.data.DatabaseInstance
 import com.truvideo.sdk.media.data.FileUploadRequestDAO
 import com.truvideo.sdk.media.data.converters.MetadataConverter
+import com.truvideo.sdk.media.exception.TruvideoSdkMediaException
 import com.truvideo.sdk.media.model.TruVideoSdkMediaFileUploadResponse
 import com.truvideo.sdk.media.model.TruvideoSdkMediaFileUploadRequest
 import com.truvideo.sdk.media.model.TruvideoSdkMediaFileUploadStatus
@@ -23,12 +25,12 @@ internal class TruvideoSdkMediaFileUploadRequestRepositoryImpl(
     private val dao: FileUploadRequestDAO
         get() = DatabaseInstance.getDatabase(context).mediaDao()
 
-    override suspend fun insert(media: TruvideoSdkMediaFileUploadRequest) {
-        suspendCoroutine { cont ->
+    override suspend fun insert(media: TruvideoSdkMediaFileUploadRequest): TruvideoSdkMediaFileUploadRequest {
+        return suspendCoroutine { cont ->
             scope.launch {
                 try {
                     dao.insert(media)
-                    cont.resumeWith(Result.success(Unit))
+                    cont.resumeWith(Result.success(media))
                 } catch (exception: Exception) {
                     exception.printStackTrace()
                     cont.resumeWith(Result.failure(exception))
@@ -37,13 +39,13 @@ internal class TruvideoSdkMediaFileUploadRequestRepositoryImpl(
         }
     }
 
-    override suspend fun update(media: TruvideoSdkMediaFileUploadRequest) {
-        suspendCoroutine { cont ->
+    override suspend fun update(media: TruvideoSdkMediaFileUploadRequest): TruvideoSdkMediaFileUploadRequest {
+        return suspendCoroutine { cont ->
             scope.launch {
                 try {
                     media.updatedAt = Date()
                     dao.update(media)
-                    cont.resumeWith(Result.success(Unit))
+                    cont.resumeWith(Result.success(media))
                 } catch (exception: Exception) {
                     exception.printStackTrace()
                     cont.resumeWith(Result.failure(exception))
@@ -52,35 +54,48 @@ internal class TruvideoSdkMediaFileUploadRequestRepositoryImpl(
         }
     }
 
-    override suspend fun updateToIdle(id: String) {
-        val model = getById(id) ?: return
+    override suspend fun updateToIdle(id: String): TruvideoSdkMediaFileUploadRequest {
+        val model = getById(id) ?: throw TruvideoSdkMediaException("Media not found")
 
-        model.progress = null
-        model.errorMessage = null
-        model.url = null
+        model.remoteId = null
+        model.remoteUrl = null
         model.transcriptionUrl = null
+        model.uploadProgress = null
+        model.errorMessage = null
         model.status = TruvideoSdkMediaFileUploadStatus.IDLE
-        update(model)
+        return update(model)
     }
 
-    override suspend fun updateToUploading(id: String) {
-        val model = getById(id) ?: return
+    override suspend fun updateToUploading(
+        id: String,
+        poolId: String,
+        region: String,
+        bucketName: String,
+        folder: String
+    ): TruvideoSdkMediaFileUploadRequest {
+        val model = getById(id) ?: throw TruvideoSdkMediaException("Media not found")
 
-        model.progress = null
+        model.remoteId = null
+        model.uploadProgress = null
         model.errorMessage = null
-        model.url = null
+        model.remoteUrl = null
         model.transcriptionUrl = null
+        model.poolId = poolId
+        model.region = region
+        model.bucketName = bucketName
+        model.folder = folder
         model.status = TruvideoSdkMediaFileUploadStatus.UPLOADING
-        update(model)
+        return update(model)
     }
 
     override suspend fun updateToSynchronizing(id: String) {
         val model = getById(id) ?: return
 
-        model.progress = null
-        model.errorMessage = null
-        model.url = null
+        model.remoteId = null
+        model.remoteUrl = null
         model.transcriptionUrl = null
+        model.uploadProgress = null
+        model.errorMessage = null
         model.status = TruvideoSdkMediaFileUploadStatus.SYNCHRONIZING
         update(model)
     }
@@ -88,9 +103,9 @@ internal class TruvideoSdkMediaFileUploadRequestRepositoryImpl(
     override suspend fun updateToError(id: String, errorMessage: String) {
         val model = getById(id) ?: return
 
-        model.progress = null
+        model.uploadProgress = null
         model.errorMessage = errorMessage
-        model.url = null
+        model.remoteUrl = null
         model.transcriptionUrl = null
         model.status = TruvideoSdkMediaFileUploadStatus.ERROR
         update(model)
@@ -100,7 +115,8 @@ internal class TruvideoSdkMediaFileUploadRequestRepositoryImpl(
         val model = getById(id) ?: return
 
         model.errorMessage = null
-        model.url = null
+        model.remoteId = null
+        model.remoteUrl = null
         model.transcriptionUrl = null
         model.status = TruvideoSdkMediaFileUploadStatus.PAUSED
         update(model)
@@ -109,9 +125,9 @@ internal class TruvideoSdkMediaFileUploadRequestRepositoryImpl(
     override suspend fun updateToCanceled(id: String) {
         val model = getById(id) ?: return
 
-        model.progress = null
+        model.uploadProgress = null
         model.errorMessage = null
-        model.url = null
+        model.remoteUrl = null
         model.transcriptionUrl = null
         model.status = TruvideoSdkMediaFileUploadStatus.CANCELED
         update(model)
@@ -120,17 +136,18 @@ internal class TruvideoSdkMediaFileUploadRequestRepositoryImpl(
     override suspend fun updateProgress(id: String, progress: Float) {
         val model = getById(id) ?: return
 
-        model.progress = progress
+        model.uploadProgress = progress
         update(model)
     }
 
     override suspend fun updateToCompleted(id: String, media: TruVideoSdkMediaFileUploadResponse) {
         val model = getById(id) ?: return
 
-        model.progress = 1.0f
+        model.uploadProgress = 1.0f
         model.errorMessage = null
-        model.url = media.url
-        model.tags = media.tags as MutableMap<String, String>
+        model.remoteId = media.id
+        model.remoteUrl = media.url
+        model.tags = media.tags
         model.metadata = MetadataConverter().toMap(media.metadata) ?: mapOf()
         model.status = TruvideoSdkMediaFileUploadStatus.COMPLETED
         model.transcriptionUrl = media.transcriptionUrl
@@ -164,10 +181,12 @@ internal class TruvideoSdkMediaFileUploadRequestRepositoryImpl(
         items.forEach {
             it.status = TruvideoSdkMediaFileUploadStatus.CANCELED
             it.externalId = null
-            it.progress = null
+            it.uploadProgress = null
             it.errorMessage = null
-            it.url = null
+            it.remoteId = null
+            it.remoteUrl = null
             it.transcriptionUrl = null
+            it.transcriptionLength = null
             update(it)
         }
     }
