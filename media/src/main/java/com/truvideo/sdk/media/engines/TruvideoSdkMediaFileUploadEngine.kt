@@ -2,6 +2,7 @@ package com.truvideo.sdk.media.engines
 
 import android.content.Context
 import android.net.Uri
+import com.truvideo.sdk.media.exception.TruvideoSdkMediaException
 import com.truvideo.sdk.media.interfaces.FileUploadCallback
 import com.truvideo.sdk.media.interfaces.TruvideoSdkMediaFileUploadCallback
 import com.truvideo.sdk.media.model.TruvideoSdkMediaFileUploadStatus
@@ -33,14 +34,14 @@ internal class TruvideoSdkMediaFileUploadEngine(
         // Get credentials
         val credentials = sdk_common.auth.settings.value?.credentials
         if (credentials == null) {
-            callback.onError(id, TruvideoSdkException("Invalid credentials"))
+            callback.onError(id, TruvideoSdkMediaException("Invalid credentials"))
             return
         }
 
         // Get entity
         var entity = repository.getById(id)
         if (entity == null) {
-            callback.onError(id, TruvideoSdkException("File upload request not found"))
+            callback.onError(id, TruvideoSdkMediaException("File upload request not found"))
             return
         }
 
@@ -110,15 +111,18 @@ internal class TruvideoSdkMediaFileUploadEngine(
                                     if (response != null) {
                                         callback.onComplete(entity.id, response)
                                     }
+
+                                    if (entity.deleteOnComplete) {
+                                        repository.delete(id)
+                                    }
+
                                 } catch (exception: Exception) {
                                     exception.printStackTrace()
-
-                                    val message = if (exception is TruvideoSdkException) exception.message else "Unknown error"
-                                    val externalException = TruvideoSdkException(message)
+                                    val message = exception.localizedMessage ?: "Unknown error"
 
                                     // Move to error
                                     repository.updateToError(id, message)
-                                    callback.onError(entity.id, externalException)
+                                    callback.onError(entity.id, TruvideoSdkMediaException(message))
                                 }
                             }
                         }
@@ -139,13 +143,11 @@ internal class TruvideoSdkMediaFileUploadEngine(
             repository.update(entity.apply { externalId = s3Id })
         } catch (exception: Exception) {
             exception.printStackTrace()
-
-            val message = if (exception is TruvideoSdkException) exception.message else "Unknown error"
-            val externalException = TruvideoSdkException(message)
+            val message = exception.localizedMessage ?: "Unknown error"
 
             // Move to error
             repository.updateToError(id, message)
-            callback.onError(entity.id, externalException)
+            callback.onError(entity.id, TruvideoSdkMediaException(message))
         }
     }
 

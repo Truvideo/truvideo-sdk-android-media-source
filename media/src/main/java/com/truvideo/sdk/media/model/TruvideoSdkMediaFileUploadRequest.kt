@@ -29,6 +29,7 @@ data class TruvideoSdkMediaFileUploadRequest(
     var uploadProgress: Float? = null,
     var transcriptionUrl: String? = null,
     var transcriptionLength: Float? = null,
+    var deleteOnComplete: Boolean = false,
 
     @TypeConverters(TagsConverter::class) var tags: Map<String, String> = mapOf(),
     @TypeConverters(MetadataConverter::class) var metadata: Map<String, Any?> = mapOf(),

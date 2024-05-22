@@ -7,6 +7,8 @@ import com.truvideo.sdk.media.adapter.VersionPropertiesAdapter
 import com.truvideo.sdk.media.engines.TruvideoSdkMediaFileUploadEngine
 import com.truvideo.sdk.media.repository.TruvideoSdkMediaFileUploadRequestRepositoryImpl
 import com.truvideo.sdk.media.service.media.TruvideoSdkMediaServiceImpl
+import com.truvideo.sdk.media.usecases.PermissionUseCase
+import com.truvideo.sdk.media.usecases.PickFileUseCase
 import com.truvideo.sdk.media.usecases.S3ClientUseCase
 import com.truvideo.sdk.media.usecases.UploadFileUseCase
 
@@ -32,11 +34,15 @@ class TruvideoSdkMediaInitializer : Initializer<Unit> {
                 repository = mediaFileUploadRequestRepository,
                 mediaService = mediaService
             )
+            val pickFileUseCase = PickFileUseCase()
+            val permissionUseCase = PermissionUseCase()
 
             TruvideoSdkMedia = TruvideoSdkMediaImpl(
                 authAdapter = authAdapter,
                 mediaFileUploadRequestRepository = mediaFileUploadRequestRepository,
                 fileUploadEngine = fileUploadEngine,
+                pickFileUseCallback = pickFileUseCase,
+                permissionUseCase = permissionUseCase
             )
         }
     }

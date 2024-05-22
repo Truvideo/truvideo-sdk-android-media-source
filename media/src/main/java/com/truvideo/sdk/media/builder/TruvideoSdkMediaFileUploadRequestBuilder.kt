@@ -19,6 +19,7 @@ class TruvideoSdkMediaFileUploadRequestBuilder(
     private val scope = CoroutineScope(Dispatchers.IO)
     private val tags = mutableMapOf<String, String>()
     private var metadata: Map<String, Any?> = mapOf()
+    private var deleteOnComplete = false
 
     fun addTag(key: String, value: String) {
         tags[key] = value
@@ -28,6 +29,10 @@ class TruvideoSdkMediaFileUploadRequestBuilder(
         metadata = map
     }
 
+    fun deleteOnComplete(enabled: Boolean = true) {
+        this.deleteOnComplete = enabled
+    }
+
     suspend fun build(): TruvideoSdkMediaFileUploadRequest {
         if (engine !is TruvideoSdkMediaFileUploadEngine) throw TruvideoSdkMediaException("Invalid engine")
 
@@ -35,7 +40,8 @@ class TruvideoSdkMediaFileUploadRequestBuilder(
             id = UUID.randomUUID().toString(),
             filePath = filePath,
             tags = tags,
-            metadata = metadata
+            metadata = metadata,
+            deleteOnComplete = deleteOnComplete
         )
         media.engine = engine
 

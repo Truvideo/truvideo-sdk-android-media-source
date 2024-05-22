@@ -12,6 +12,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.truvideo.media.app.ui.activities.main_activity.MainActivity
 import com.truvideo.media.app.ui.theme.TruvideosdkmediaTheme
 import com.truvideo.sdk.core.TruvideoSdk
 import truvideo.sdk.common.model.TruvideoSdkEnvironment
@@ -23,7 +24,7 @@ class LoginActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         TruvideoSdk.clear()
-        sdk_common.configuration.environment = TruvideoSdkEnvironment.PROD
+        sdk_common.configuration.environment = TruvideoSdkEnvironment.RC
 
         setContent {
             TruvideosdkmediaTheme {
@@ -39,11 +40,17 @@ class LoginActivity : ComponentActivity() {
 
     @Composable
     fun Content() {
-        val activity = this
-//        val apiKey = "VS2SG9WK"
-//        val secret = "ST2K33GR"
-        val apiKey = "EPhPPsbv7e"
-        val secret = "9lHCnkfeLl"
+        val apiKey = when (sdk_common.configuration.environment) {
+            TruvideoSdkEnvironment.BETA -> "VS2SG9WK"
+            TruvideoSdkEnvironment.RC -> "VS2SG9WK"
+            TruvideoSdkEnvironment.PROD -> "EPhPPsbv7e"
+        }
+
+        val secret = when (sdk_common.configuration.environment) {
+            TruvideoSdkEnvironment.BETA -> "ST2K33GR"
+            TruvideoSdkEnvironment.RC -> "ST2K33GR"
+            TruvideoSdkEnvironment.PROD -> "9lHCnkfeLl"
+        }
 
         Box(
             Modifier
@@ -59,7 +66,9 @@ class LoginActivity : ComponentActivity() {
                 authenticate = { apiKey, payload, secret -> TruvideoSdk.authenticate(apiKey, payload, secret) },
                 init = { TruvideoSdk.init() },
                 callback = {
-                    val intent = Intent(activity, MainActivity::class.java)
+                    finish()
+
+                    val intent = Intent(applicationContext, MainActivity::class.java)
                     startActivity(intent)
                 }
             )
