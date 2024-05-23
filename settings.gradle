@@ -17,4 +17,3 @@ dependencyResolutionManagement {
 rootProject.name = "truvideo.sdk.media"
 include ':media'
 //include ':app'
-
