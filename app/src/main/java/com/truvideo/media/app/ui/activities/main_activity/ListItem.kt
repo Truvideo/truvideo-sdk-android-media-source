@@ -4,7 +4,6 @@ import android.app.AlertDialog
 import android.util.Log
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -36,11 +35,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.truvideo.sdk.components.button.TruvideoButton
+import com.truvideo.sdk.components.scale_button.TruvideoScaleButton
 import com.truvideo.sdk.media.exception.TruvideoSdkMediaException
 import com.truvideo.sdk.media.interfaces.TruvideoSdkMediaFileUploadCallback
 import com.truvideo.sdk.media.model.TruvideoSdkMediaFileUploadRequest
 import kotlinx.coroutines.launch
-import truvideo.sdk.components.button.TruvideoButton
 
 @Composable
 fun ListItem(request: TruvideoSdkMediaFileUploadRequest) {
@@ -54,212 +54,213 @@ fun ListItem(request: TruvideoSdkMediaFileUploadRequest) {
             .show()
     }
 
-    Card(Modifier.fillMaxWidth()) {
-        Column(Modifier
-            .clickable {
-                infoVisible = !infoVisible
-            }
-            .padding(8.dp)
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(1f)) {
-                    Text(request.id, style = MaterialTheme.typography.bodyMedium)
-                    Text(request.filePath, style = MaterialTheme.typography.bodySmall)
+    TruvideoScaleButton(
+        onPressed = {
+            infoVisible = !infoVisible
+        }
+    ) {
+        Card(Modifier.fillMaxWidth()) {
+            Column(
+                Modifier.padding(8.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Text(request.id, style = MaterialTheme.typography.bodyMedium)
+                        Text(request.filePath, style = MaterialTheme.typography.bodySmall)
+                    }
+
+                    Box(
+                        Modifier
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(MaterialTheme.colorScheme.background)
+                            .padding(horizontal = 4.dp, vertical = 2.dp)
+                    ) {
+                        Text(request.status.name)
+                    }
+
+                    Icon(
+                        imageVector = if (infoVisible) Icons.Outlined.KeyboardArrowUp else Icons.Outlined.KeyboardArrowDown,
+                        contentDescription = "",
+                        modifier = Modifier.padding(start = 8.dp)
+                    )
                 }
+
 
                 Box(
                     Modifier
-                        .clip(RoundedCornerShape(4.dp))
-                        .background(MaterialTheme.colorScheme.background)
-                        .padding(horizontal = 4.dp, vertical = 2.dp)
-                ) {
-                    Text(request.status.name)
-                }
+                        .fillMaxWidth()
+                        .animateContentSize { _, _ -> }) {
+                    if (infoVisible) {
+                        Column {
+                            Text("Created At", fontSize = 10.sp, fontWeight = FontWeight.W500)
+                            Text("${request.createdAt}", fontSize = 10.sp)
 
-                Icon(
-                    imageVector = if (infoVisible) Icons.Outlined.KeyboardArrowUp else Icons.Outlined.KeyboardArrowDown,
-                    contentDescription = "",
-                    modifier = Modifier.padding(start = 8.dp)
-                )
-            }
+                            Text("Updated At", fontSize = 10.sp, fontWeight = FontWeight.W500)
+                            Text("${request.updatedAt}", fontSize = 10.sp)
 
-
-            Box(
-                Modifier
-                    .fillMaxWidth()
-                    .animateContentSize { _, _ -> }) {
-                if (infoVisible) {
-                    Column {
-                        Text("Created At", fontSize = 10.sp, fontWeight = FontWeight.W500)
-                        Text("${request.createdAt}", fontSize = 10.sp)
-
-                        Text("Updated At", fontSize = 10.sp, fontWeight = FontWeight.W500)
-                        Text("${request.updatedAt}", fontSize = 10.sp)
-
-                        if (request.uploadProgress != null) {
-                            Text("Progress", fontSize = 10.sp, fontWeight = FontWeight.W500)
-                            Text("${(request.uploadProgress!! * 100)}%", fontSize = 10.sp)
-                        }
-
-                        if (request.remoteId != null) {
-                            Text("Remote ID", fontSize = 10.sp, fontWeight = FontWeight.W500)
-                            Text("${request.remoteId}", fontSize = 10.sp)
-                        }
-
-                        if (request.remoteUrl != null) {
-                            Text("Remote URL", fontSize = 10.sp, fontWeight = FontWeight.W500)
-                            Text("${request.remoteUrl}", fontSize = 10.sp)
-                        }
-
-                        if (request.transcriptionUrl != null) {
-                            Text("Transcription URL", fontSize = 10.sp, fontWeight = FontWeight.W500)
-                            Text("${request.transcriptionUrl}", fontSize = 10.sp)
-                        }
-
-                        if (request.tags.entries.isNotEmpty()) {
-                            Text("Tags", fontSize = 10.sp, fontWeight = FontWeight.W500)
-                            request.tags.entries.forEach {
-                                Text("${it.key} = ${it.value}", fontSize = 10.sp)
+                            if (request.uploadProgress != null) {
+                                Text("Progress", fontSize = 10.sp, fontWeight = FontWeight.W500)
+                                Text("${(request.uploadProgress!! * 100)}%", fontSize = 10.sp)
                             }
-                        }
 
-                        if (request.metadata.entries.isNotEmpty()) {
-                            Text("Metadata", fontSize = 10.sp, fontWeight = FontWeight.W500)
-                            request.metadata.entries.forEach {
-                                if (it.value is Map<*, *>) {
-                                    Text("${it.key} = ", fontSize = 10.sp)
-                                    (it.value as Map<*, *>).entries.forEach { nested ->
-                                        Text(
-                                            "${nested.key} = ${nested.value}",
-                                            fontSize = 10.sp,
-                                            modifier = Modifier.padding(start = 8.dp)
-                                        )
-                                    }
-                                } else {
+                            if (request.remoteId != null) {
+                                Text("Remote ID", fontSize = 10.sp, fontWeight = FontWeight.W500)
+                                Text("${request.remoteId}", fontSize = 10.sp)
+                            }
+
+                            if (request.remoteUrl != null) {
+                                Text("Remote URL", fontSize = 10.sp, fontWeight = FontWeight.W500)
+                                Text("${request.remoteUrl}", fontSize = 10.sp)
+                            }
+
+                            if (request.transcriptionUrl != null) {
+                                Text("Transcription URL", fontSize = 10.sp, fontWeight = FontWeight.W500)
+                                Text("${request.transcriptionUrl}", fontSize = 10.sp)
+                            }
+
+                            if (request.tags.entries.isNotEmpty()) {
+                                Text("Tags", fontSize = 10.sp, fontWeight = FontWeight.W500)
+                                request.tags.entries.forEach {
                                     Text("${it.key} = ${it.value}", fontSize = 10.sp)
                                 }
                             }
-                        }
 
-                        Box(Modifier.height(16.dp))
+                            if (request.metadata.entries.isNotEmpty()) {
+                                Text("Metadata", fontSize = 10.sp, fontWeight = FontWeight.W500)
+                                request.metadata.entries.forEach {
+                                    if (it.value is Map<*, *>) {
+                                        Text("${it.key} = ", fontSize = 10.sp)
+                                        (it.value as Map<*, *>).entries.forEach { nested ->
+                                            Text(
+                                                "${nested.key} = ${nested.value}",
+                                                fontSize = 10.sp,
+                                                modifier = Modifier.padding(start = 8.dp)
+                                            )
+                                        }
+                                    } else {
+                                        Text("${it.key} = ${it.value}", fontSize = 10.sp)
+                                    }
+                                }
+                            }
 
-                        Row(
-                            Modifier
-                                .fillMaxWidth()
-                                .horizontalScroll(rememberScrollState())
-                        ) {
-                            TruvideoButton(
-                                text = "Upload",
-                                onPressed = {
-                                    scope.launch {
-                                        try {
-                                            request.upload(
-                                                object : TruvideoSdkMediaFileUploadCallback {
+                            Box(Modifier.height(16.dp))
 
-                                                    override fun onComplete(
-                                                        id: String,
-                                                        response: TruvideoSdkMediaFileUploadRequest
-                                                    ) {
-                                                        Log.d("TruvideoSdkMedia", "$id Complete")
-                                                        response.tags.entries.forEach {
-                                                            Log.d("TruvideoSdkMedia", "${it.key} = ${it.value}")
+                            Row(
+                                Modifier
+                                    .fillMaxWidth()
+                                    .horizontalScroll(rememberScrollState())
+                            ) {
+                                TruvideoButton(
+                                    text = "Upload",
+                                    onPressed = {
+                                        scope.launch {
+                                            try {
+                                                request.upload(
+                                                    object : TruvideoSdkMediaFileUploadCallback {
+
+                                                        override fun onComplete(
+                                                            id: String,
+                                                            response: TruvideoSdkMediaFileUploadRequest
+                                                        ) {
+                                                            Log.d("TruvideoSdkMedia", "$id Complete")
+                                                            response.tags.entries.forEach {
+                                                                Log.d("TruvideoSdkMedia", "${it.key} = ${it.value}")
+                                                            }
+                                                        }
+
+                                                        override fun onProgressChanged(
+                                                            id: String,
+                                                            progress: Float
+                                                        ) {
+                                                            Log.d("TruvideoSdkMedia", "$id $progress")
+                                                        }
+
+                                                        override fun onError(
+                                                            id: String,
+                                                            ex: TruvideoSdkMediaException
+                                                        ) {
+                                                            Log.d("TruvideoSdkMedia", "$id $ex")
                                                         }
                                                     }
-
-                                                    override fun onProgressChanged(
-                                                        id: String,
-                                                        progress: Float
-                                                    ) {
-                                                        Log.d("TruvideoSdkMedia", "$id $progress")
-                                                    }
-
-                                                    override fun onError(
-                                                        id: String,
-                                                        ex: TruvideoSdkMediaException
-                                                    ) {
-                                                        Log.d("TruvideoSdkMedia", "$id $ex")
-                                                    }
-                                                }
-                                            )
-                                        } catch (exception: Exception) {
-                                            exception.printStackTrace()
-                                            showError(exception.localizedMessage ?: "Uknown error")
+                                                )
+                                            } catch (exception: Exception) {
+                                                exception.printStackTrace()
+                                                showError(exception.localizedMessage ?: "Uknown error")
+                                            }
                                         }
                                     }
-                                }
-                            )
+                                )
 
-                            Box(Modifier.width(8.dp))
+                                Box(Modifier.width(8.dp))
 
-                            TruvideoButton(
-                                text = "Pause",
-                                onPressed = {
-                                    scope.launch {
-                                        try {
-                                            request.pause()
-                                        } catch (exception: Exception) {
-                                            exception.printStackTrace()
-                                            showError(exception.localizedMessage ?: "Uknown error")
+                                TruvideoButton(
+                                    text = "Pause",
+                                    onPressed = {
+                                        scope.launch {
+                                            try {
+                                                request.pause()
+                                            } catch (exception: Exception) {
+                                                exception.printStackTrace()
+                                                showError(exception.localizedMessage ?: "Uknown error")
+                                            }
                                         }
                                     }
-                                }
-                            )
+                                )
 
-                            Box(Modifier.width(8.dp))
+                                Box(Modifier.width(8.dp))
 
-                            TruvideoButton(
-                                text = "Resume",
-                                onPressed = {
-                                    scope.launch {
-                                        try {
-                                            request.resume()
-                                        } catch (exception: Exception) {
-                                            exception.printStackTrace()
-                                            showError(exception.localizedMessage ?: "Uknown error")
+                                TruvideoButton(
+                                    text = "Resume",
+                                    onPressed = {
+                                        scope.launch {
+                                            try {
+                                                request.resume()
+                                            } catch (exception: Exception) {
+                                                exception.printStackTrace()
+                                                showError(exception.localizedMessage ?: "Uknown error")
+                                            }
                                         }
                                     }
-                                }
-                            )
+                                )
 
-                            Box(Modifier.width(8.dp))
+                                Box(Modifier.width(8.dp))
 
-                            TruvideoButton(
-                                text = "Cancel",
-                                onPressed = {
-                                    scope.launch {
-                                        try {
-                                            request.cancel()
-                                        } catch (exception: Exception) {
-                                            exception.printStackTrace()
-                                            showError(exception.localizedMessage ?: "Uknown error")
+                                TruvideoButton(
+                                    text = "Cancel",
+                                    onPressed = {
+                                        scope.launch {
+                                            try {
+                                                request.cancel()
+                                            } catch (exception: Exception) {
+                                                exception.printStackTrace()
+                                                showError(exception.localizedMessage ?: "Uknown error")
+                                            }
                                         }
                                     }
-                                }
-                            )
+                                )
 
-                            Box(Modifier.width(8.dp))
+                                Box(Modifier.width(8.dp))
 
-                            TruvideoButton(
-                                text = "Delete",
-                                onPressed = {
-                                    scope.launch {
-                                        try {
-                                            request.delete()
-                                        } catch (exception: Exception) {
-                                            exception.printStackTrace()
-                                            showError(exception.localizedMessage ?: "Uknown error")
+                                TruvideoButton(
+                                    text = "Delete",
+                                    onPressed = {
+                                        scope.launch {
+                                            try {
+                                                request.delete()
+                                            } catch (exception: Exception) {
+                                                exception.printStackTrace()
+                                                showError(exception.localizedMessage ?: "Uknown error")
+                                            }
                                         }
                                     }
-                                }
-                            )
+                                )
+                            }
                         }
                     }
+
+
                 }
-
-
             }
-
-
         }
     }
 }

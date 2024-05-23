@@ -1,6 +1,5 @@
 package com.truvideo.sdk.media
 
-import androidx.activity.ComponentActivity
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.map
 import com.truvideo.sdk.media.builder.TruvideoSdkMediaFileUploadRequestBuilder
@@ -9,12 +8,9 @@ import com.truvideo.sdk.media.exception.TruvideoSdkMediaException
 import com.truvideo.sdk.media.interfaces.TruvideoSdkMedia
 import com.truvideo.sdk.media.interfaces.TruvideoSdkMediaAuthAdapter
 import com.truvideo.sdk.media.interfaces.TruvideoSdkMediaCallback
-import com.truvideo.sdk.media.model.TruvideoSdkMediaFileType
 import com.truvideo.sdk.media.model.TruvideoSdkMediaFileUploadRequest
 import com.truvideo.sdk.media.model.TruvideoSdkMediaFileUploadStatus
 import com.truvideo.sdk.media.repository.TruvideoSdkMediaFileUploadRequestRepository
-import com.truvideo.sdk.media.usecases.PermissionUseCase
-import com.truvideo.sdk.media.usecases.PickFileUseCase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -22,20 +18,13 @@ import kotlinx.coroutines.launch
 internal class TruvideoSdkMediaImpl(
     private val authAdapter: TruvideoSdkMediaAuthAdapter,
     private val mediaFileUploadRequestRepository: TruvideoSdkMediaFileUploadRequestRepository,
-    private val fileUploadEngine: TruvideoSdkMediaFileUploadEngine,
-    private val pickFileUseCallback: PickFileUseCase,
-    private val permissionUseCase: PermissionUseCase
+    private val fileUploadEngine: TruvideoSdkMediaFileUploadEngine
 ) : TruvideoSdkMedia {
 
     private var scope = CoroutineScope(Dispatchers.IO)
 
     init {
         scope.launch { mediaFileUploadRequestRepository.cancelAllProcessing() }
-    }
-
-    override fun init(activity: ComponentActivity) {
-        pickFileUseCallback.init(activity)
-        permissionUseCase.init(activity)
     }
 
     override fun FileUploadRequestBuilder(filePath: String): TruvideoSdkMediaFileUploadRequestBuilder {
@@ -144,26 +133,6 @@ internal class TruvideoSdkMediaImpl(
         val items = mediaFileUploadRequestRepository.getAll(status)
         items.forEach { it.engine = fileUploadEngine }
         return items
-    }
-
-    override suspend fun pickFile(type: TruvideoSdkMediaFileType): String? {
-        authAdapter.validateAuthentication()
-
-        val permission = askReadStoragePermission()
-        if (!permission) throw TruvideoSdkMediaException("No read storage permission")
-        return pickFileUseCallback.pick(type)
-    }
-
-    override fun hasReadStoragePermission(): Boolean {
-        authAdapter.validateAuthentication()
-
-        return permissionUseCase.hasReadStoragePermission()
-    }
-
-    override suspend fun askReadStoragePermission(): Boolean {
-        authAdapter.validateAuthentication()
-
-        return permissionUseCase.askReadStoragePermission()
     }
 
     override val environment: String
