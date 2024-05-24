@@ -1,6 +1,6 @@
 package com.truvideo.sdk.media.interfaces
 
-internal interface TruvideoSdkVideoAuthAdapter {
+internal interface TruvideoSdkMediaAuthAdapter {
 
     fun validateAuthentication()
 

@@ -12,5 +12,11 @@
                 android:name="com.truvideo.sdk.media.TruvideoSdkMediaInitializer"
                 android:value="androidx.startup" />
         </provider>
+
+        <service
+            android:name="com.amazonaws.mobileconnectors.s3.transferutility.TransferService"
+            android:enabled="true"
+            android:process=":sync" />
+
     </application>
 </manifest>

@@ -3,6 +3,7 @@ plugins {
     id 'org.jetbrains.kotlin.android'
     id 'maven-publish'
     id 'com.google.devtools.ksp'
+    id 'org.jetbrains.kotlin.plugin.serialization'
 }
 
 def propertiesFile = rootProject.file("media/src/main/assets/version.properties")
@@ -16,7 +17,6 @@ android {
     defaultConfig {
         minSdk 24
         targetSdk 34
-        versionCode properties.getProperty("versionCode").toInteger()
         versionName properties.getProperty("versionName")
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -63,11 +63,12 @@ android {
 
 dependencies {
     implementation "androidx.startup:startup-runtime:1.1.1"
-
+    implementation 'org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0'
     implementation 'androidx.core:core-ktx:1.13.1'
-    implementation 'androidx.lifecycle:lifecycle-extensions:2.2.0'
-    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.7.0'
-    implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.7.0'
+
+    // Common
+    var commonVersion = properties.getProperty("commonVersion")
+    implementation("com.github.Truvideo:truvideo-sdk-android-common:$commonVersion")
 
     // S3
     implementation 'com.amazonaws:aws-android-sdk-mobile-client:2.16.6'
@@ -79,6 +80,7 @@ dependencies {
     annotationProcessor "androidx.room:room-compiler:2.6.1"
     ksp "androidx.room:room-compiler:2.6.1"
 
+    // Test
     testImplementation 'junit:junit:4.13.2'
     testImplementation "androidx.test:core:1.5.0"
     testImplementation "org.mockito:mockito-core:5.4.0"
@@ -86,19 +88,24 @@ dependencies {
     testImplementation "io.mockk:mockk:1.13.5"
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
-
-    // Common
-    var commonVersion = properties.getProperty("commonVersion")
-    implementation("com.github.truvideo:truvideo-sdk-android-common:$commonVersion")
 }
 
 project.afterEvaluate {
     publishing {
         publications {
             library(MavenPublication) {
-                setGroupId 'com.truvideo.sdk'
-                setArtifactId 'media'
+                setGroupId 'com.github.Truvideo'
+                setArtifactId 'truvideo-sdk-android-media-local'
                 version android.defaultConfig.versionName
+
+                def environment = properties.getProperty("environment")
+                if (environment == "beta") {
+                    artifact bundleBetaReleaseAar
+                } else if (environment == "rc") {
+                    artifact bundleRcReleaseAar
+                } else {
+                    artifact bundleProdReleaseAar
+                }
 
                 pom.withXml {
                     //noinspection GroovyImplicitNullArgumentCall

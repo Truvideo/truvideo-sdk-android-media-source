@@ -10,15 +10,14 @@ import com.amazonaws.regions.Region
 import com.amazonaws.regions.Regions
 import com.amazonaws.services.s3.AmazonS3Client
 import com.amazonaws.services.s3.S3ClientOptions
-import kotlin.coroutines.suspendCoroutine
 
 internal class S3ClientUseCase(
     private val context: Context
 ) {
-    suspend fun getClient(
+    fun getClient(
         region: String,
         poolId: String,
-    ): AmazonS3Client = suspendCoroutine {
+    ): AmazonS3Client {
         val parsedRegion = Regions.fromName(region)
         val clientConfiguration = ClientConfiguration()
         clientConfiguration.maxErrorRetry = 0
@@ -36,18 +35,16 @@ internal class S3ClientUseCase(
             .setAccelerateModeEnabled(accelerate)
             .build()
         client.setS3ClientOptions(options)
-        it.resumeWith(Result.success(client))
+        return client
     }
 
-    suspend fun getTransferUtility(client: AmazonS3Client): TransferUtility = suspendCoroutine {
+    fun getTransferUtility(client: AmazonS3Client): TransferUtility {
         TransferNetworkLossHandler.getInstance(context)
         val awsConfiguration = AWSMobileClient.getInstance().configuration
-        val transferUtility = TransferUtility.builder()
+        return TransferUtility.builder()
             .context(context)
             .s3Client(client)
             .awsConfiguration(awsConfiguration)
             .build()
-
-        it.resumeWith(Result.success(transferUtility))
     }
 }

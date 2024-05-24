@@ -4,21 +4,21 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.map
 import com.truvideo.sdk.media.builder.TruvideoSdkMediaFileUploadRequestBuilder
 import com.truvideo.sdk.media.engines.TruvideoSdkMediaFileUploadEngine
-import com.truvideo.sdk.media.interfaces.TruvideoSdkGenericCallback
+import com.truvideo.sdk.media.exception.TruvideoSdkMediaException
 import com.truvideo.sdk.media.interfaces.TruvideoSdkMedia
-import com.truvideo.sdk.media.interfaces.TruvideoSdkVideoAuthAdapter
+import com.truvideo.sdk.media.interfaces.TruvideoSdkMediaAuthAdapter
+import com.truvideo.sdk.media.interfaces.TruvideoSdkMediaCallback
 import com.truvideo.sdk.media.model.TruvideoSdkMediaFileUploadRequest
 import com.truvideo.sdk.media.model.TruvideoSdkMediaFileUploadStatus
 import com.truvideo.sdk.media.repository.TruvideoSdkMediaFileUploadRequestRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import truvideo.sdk.common.exception.TruvideoSdkException
 
 internal class TruvideoSdkMediaImpl(
-    private val authAdapter: TruvideoSdkVideoAuthAdapter,
+    private val authAdapter: TruvideoSdkMediaAuthAdapter,
     private val mediaFileUploadRequestRepository: TruvideoSdkMediaFileUploadRequestRepository,
-    private val fileUploadEngine: TruvideoSdkMediaFileUploadEngine,
+    private val fileUploadEngine: TruvideoSdkMediaFileUploadEngine
 ) : TruvideoSdkMedia {
 
     private var scope = CoroutineScope(Dispatchers.IO)
@@ -39,7 +39,7 @@ internal class TruvideoSdkMediaImpl(
 
     override fun streamAllFileUploadRequests(
         status: TruvideoSdkMediaFileUploadStatus?,
-        callback: TruvideoSdkGenericCallback<LiveData<List<TruvideoSdkMediaFileUploadRequest>>>
+        callback: TruvideoSdkMediaCallback<LiveData<List<TruvideoSdkMediaFileUploadRequest>>>
     ) {
         scope.launch {
             try {
@@ -47,13 +47,7 @@ internal class TruvideoSdkMediaImpl(
                 callback.onComplete(data)
             } catch (exception: Exception) {
                 exception.printStackTrace()
-
-                val externalException = if (exception is TruvideoSdkException) {
-                    exception
-                } else {
-                    TruvideoSdkException("Unknown exception")
-                }
-                callback.onError(externalException)
+                callback.onError(TruvideoSdkMediaException(exception.message ?: "Unknown message"))
             }
         }
     }
@@ -71,9 +65,29 @@ internal class TruvideoSdkMediaImpl(
         }
     }
 
+    override suspend fun getFileUploadRequestById(id: String): TruvideoSdkMediaFileUploadRequest? {
+        authAdapter.validateAuthentication()
+
+        val request = mediaFileUploadRequestRepository.getById(id) ?: return null
+        request.engine = fileUploadEngine
+        return request
+    }
+
+    override fun getFileUploadRequestById(id: String, callback: TruvideoSdkMediaCallback<TruvideoSdkMediaFileUploadRequest?>) {
+        scope.launch {
+            try {
+                val request = getFileUploadRequestById(id)
+                callback.onComplete(request)
+            } catch (exception: Exception) {
+                exception.printStackTrace()
+                callback.onError(TruvideoSdkMediaException(exception.message ?: "Unknown message"))
+            }
+        }
+    }
+
     override fun streamFileUploadRequestById(
         id: String,
-        callback: TruvideoSdkGenericCallback<LiveData<TruvideoSdkMediaFileUploadRequest?>>
+        callback: TruvideoSdkMediaCallback<LiveData<TruvideoSdkMediaFileUploadRequest?>>
     ) {
         scope.launch {
             try {
@@ -81,13 +95,7 @@ internal class TruvideoSdkMediaImpl(
                 callback.onComplete(data)
             } catch (exception: Exception) {
                 exception.printStackTrace()
-
-                val externalException = if (exception is TruvideoSdkException) {
-                    exception
-                } else {
-                    TruvideoSdkException("Unknown exception")
-                }
-                callback.onError(externalException)
+                callback.onError(TruvideoSdkMediaException(exception.message ?: "Unknown message"))
             }
         }
     }
@@ -106,7 +114,7 @@ internal class TruvideoSdkMediaImpl(
 
     override fun getAllFileUploadRequests(
         status: TruvideoSdkMediaFileUploadStatus?,
-        callback: TruvideoSdkGenericCallback<List<TruvideoSdkMediaFileUploadRequest>>
+        callback: TruvideoSdkMediaCallback<List<TruvideoSdkMediaFileUploadRequest>>
     ) {
         scope.launch {
             try {
@@ -114,13 +122,7 @@ internal class TruvideoSdkMediaImpl(
                 callback.onComplete(data)
             } catch (exception: Exception) {
                 exception.printStackTrace()
-
-                val externalException = if (exception is TruvideoSdkException) {
-                    exception
-                } else {
-                    TruvideoSdkException("Unknown exception")
-                }
-                callback.onError(externalException)
+                callback.onError(TruvideoSdkMediaException(exception.message ?: "Unknown message"))
             }
         }
     }
@@ -133,4 +135,6 @@ internal class TruvideoSdkMediaImpl(
         return items
     }
 
+    override val environment: String
+        get() = BuildConfig.FLAVOR
 }

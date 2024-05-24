@@ -1,21 +1,26 @@
 package com.truvideo.sdk.media.service.media
 
-import com.truvideo.sdk.media.interfaces.TruvideoSdkVideoAuthAdapter
+import com.truvideo.sdk.media.data.converters.MetadataConverter
+import com.truvideo.sdk.media.exception.TruvideoSdkMediaException
+import com.truvideo.sdk.media.interfaces.TruvideoSdkMediaAuthAdapter
+import com.truvideo.sdk.media.model.TruVideoSdkMediaFileUploadResponse
 import org.json.JSONObject
 import truvideo.sdk.common.exception.TruvideoSdkException
+import truvideo.sdk.common.model.baseUrl
 import truvideo.sdk.common.sdk_common
 
 internal class TruvideoSdkMediaServiceImpl(
-    private val authAdapter: TruvideoSdkVideoAuthAdapter
+    private val authAdapter: TruvideoSdkMediaAuthAdapter
 ) : TruvideoSdkMediaService {
-
 
     override suspend fun createMedia(
         title: String,
         url: String,
         size: Long,
-        type: String
-    ): String {
+        type: String,
+        tags: Map<String, String>,
+        metadata: Map<String, Any?>
+    ): TruVideoSdkMediaFileUploadResponse {
         authAdapter.validateAuthentication()
         authAdapter.refresh()
 
@@ -33,19 +38,27 @@ internal class TruvideoSdkMediaServiceImpl(
             put("url", url)
             put("resolution", "LOW")
             put("size", size)
+            put("tags", JSONObject().apply { for (tag in tags) put(tag.key, tag.value) })
+            put("metadata", MetadataConverter().fromMap(metadata))
         }
 
+        val baseUrl = sdk_common.configuration.environment.baseUrl
         val response = sdk_common.http.post(
-            url = "https://sdk-mobile-api-beta.truvideo.com:443/api/media",
+            url = "$baseUrl/api/media",
             headers = headers,
             body = body.toString(),
-            retry = true
+            retry = false
         )
 
         if (response == null || !response.isSuccess) {
             throw TruvideoSdkException("Error creating media")
         }
 
-        return JSONObject(response.body).getString("url")
+        try {
+            return TruVideoSdkMediaFileUploadResponse.fromJson(response.body)
+        } catch (exception: Exception) {
+            exception.printStackTrace()
+            throw TruvideoSdkMediaException("Error parsing media response")
+        }
     }
 }

@@ -13,26 +13,32 @@ interface TruvideoSdkMedia {
 
     fun streamAllFileUploadRequests(
         status: TruvideoSdkMediaFileUploadStatus? = null,
-        callback: TruvideoSdkGenericCallback<LiveData<List<TruvideoSdkMediaFileUploadRequest>>>
+        callback: TruvideoSdkMediaCallback<LiveData<List<TruvideoSdkMediaFileUploadRequest>>>
     )
 
     suspend fun streamAllFileUploadRequests(
         status: TruvideoSdkMediaFileUploadStatus? = null
     ): LiveData<List<TruvideoSdkMediaFileUploadRequest>>
 
+    suspend fun getFileUploadRequestById(id: String): TruvideoSdkMediaFileUploadRequest?
+
+    fun getFileUploadRequestById(id: String, callback: TruvideoSdkMediaCallback<TruvideoSdkMediaFileUploadRequest?>)
+
     fun streamFileUploadRequestById(
         id: String,
-        callback: TruvideoSdkGenericCallback<LiveData<TruvideoSdkMediaFileUploadRequest?>>
+        callback: TruvideoSdkMediaCallback<LiveData<TruvideoSdkMediaFileUploadRequest?>>
     )
 
     suspend fun streamFileUploadRequestById(id: String): LiveData<TruvideoSdkMediaFileUploadRequest?>
 
     fun getAllFileUploadRequests(
         status: TruvideoSdkMediaFileUploadStatus? = null,
-        callback: TruvideoSdkGenericCallback<List<TruvideoSdkMediaFileUploadRequest>>
+        callback: TruvideoSdkMediaCallback<List<TruvideoSdkMediaFileUploadRequest>>
     )
 
     suspend fun getAllFileUploadRequests(
         status: TruvideoSdkMediaFileUploadStatus? = null,
     ): List<TruvideoSdkMediaFileUploadRequest>
+
+    val environment: String
 }
