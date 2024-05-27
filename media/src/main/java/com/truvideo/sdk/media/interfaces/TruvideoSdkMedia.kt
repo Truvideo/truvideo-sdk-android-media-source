@@ -6,6 +6,8 @@ import androidx.lifecycle.LiveData
 import com.truvideo.sdk.media.builder.TruvideoSdkMediaFileUploadRequestBuilder
 import com.truvideo.sdk.media.model.TruvideoSdkMediaFileUploadRequest
 import com.truvideo.sdk.media.model.TruvideoSdkMediaFileUploadStatus
+import com.truvideo.sdk.media.model.TruvideoSdkMediaResponse
+import com.truvideo.sdk.media.model.TruvideoSdkPaginatedResponse
 
 interface TruvideoSdkMedia {
 
@@ -20,13 +22,14 @@ interface TruvideoSdkMedia {
         status: TruvideoSdkMediaFileUploadStatus? = null
     ): LiveData<List<TruvideoSdkMediaFileUploadRequest>>
 
-    suspend fun getFileUploadRequestById(id:String): TruvideoSdkMediaFileUploadRequest?
+    suspend fun getFileUploadRequestById(id: String): TruvideoSdkMediaFileUploadRequest?
 
-    fun getFileUploadRequestById(id:String, callback: TruvideoSdkMediaCallback<TruvideoSdkMediaFileUploadRequest?>)
+    fun getFileUploadRequestById(
+        id: String, callback: TruvideoSdkMediaCallback<TruvideoSdkMediaFileUploadRequest?>
+    )
 
     fun streamFileUploadRequestById(
-        id: String,
-        callback: TruvideoSdkMediaCallback<LiveData<TruvideoSdkMediaFileUploadRequest?>>
+        id: String, callback: TruvideoSdkMediaCallback<LiveData<TruvideoSdkMediaFileUploadRequest?>>
     )
 
     suspend fun streamFileUploadRequestById(id: String): LiveData<TruvideoSdkMediaFileUploadRequest?>
@@ -39,6 +42,20 @@ interface TruvideoSdkMedia {
     suspend fun getAllFileUploadRequests(
         status: TruvideoSdkMediaFileUploadStatus? = null,
     ): List<TruvideoSdkMediaFileUploadRequest>
+
+    fun getById(id: String, callback: TruvideoSdkMediaCallback<TruvideoSdkMediaResponse?>)
+
+    suspend fun getById(id: String): TruvideoSdkMediaResponse?
+
+    fun search(
+        tags: Map<String, String>? = null,
+        type: String? = null,
+        callback: TruvideoSdkMediaCallback<TruvideoSdkPaginatedResponse<TruvideoSdkMediaResponse>>
+    )
+
+    suspend fun search(
+        tags: Map<String, String>? = null, type: String? = null
+    ): TruvideoSdkPaginatedResponse<TruvideoSdkMediaResponse>
 
     val environment: String
 }

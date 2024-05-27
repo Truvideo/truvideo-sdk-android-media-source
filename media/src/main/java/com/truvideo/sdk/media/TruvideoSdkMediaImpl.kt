@@ -10,6 +10,8 @@ import com.truvideo.sdk.media.interfaces.TruvideoSdkMediaAuthAdapter
 import com.truvideo.sdk.media.interfaces.TruvideoSdkMediaCallback
 import com.truvideo.sdk.media.model.TruvideoSdkMediaFileUploadRequest
 import com.truvideo.sdk.media.model.TruvideoSdkMediaFileUploadStatus
+import com.truvideo.sdk.media.model.TruvideoSdkMediaResponse
+import com.truvideo.sdk.media.model.TruvideoSdkPaginatedResponse
 import com.truvideo.sdk.media.repository.TruvideoSdkMediaFileUploadRequestRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -73,7 +75,9 @@ internal class TruvideoSdkMediaImpl(
         return request
     }
 
-    override fun getFileUploadRequestById(id: String, callback: TruvideoSdkMediaCallback<TruvideoSdkMediaFileUploadRequest?>) {
+    override fun getFileUploadRequestById(
+        id: String, callback: TruvideoSdkMediaCallback<TruvideoSdkMediaFileUploadRequest?>
+    ) {
 
         scope.launch {
             try {
@@ -87,8 +91,7 @@ internal class TruvideoSdkMediaImpl(
     }
 
     override fun streamFileUploadRequestById(
-        id: String,
-        callback: TruvideoSdkMediaCallback<LiveData<TruvideoSdkMediaFileUploadRequest?>>
+        id: String, callback: TruvideoSdkMediaCallback<LiveData<TruvideoSdkMediaFileUploadRequest?>>
     ) {
         scope.launch {
             try {
@@ -134,6 +137,66 @@ internal class TruvideoSdkMediaImpl(
         val items = mediaFileUploadRequestRepository.getAll(status)
         items.forEach { it.engine = fileUploadEngine }
         return items
+    }
+
+    override fun getById(
+        id: String, callback: TruvideoSdkMediaCallback<TruvideoSdkMediaResponse?>
+    ) {
+        val internalCallback = object :
+            TruvideoSdkMediaCallback<TruvideoSdkPaginatedResponse<TruvideoSdkMediaResponse>> {
+            override fun onComplete(data: TruvideoSdkPaginatedResponse<TruvideoSdkMediaResponse>) {
+                callback.onComplete(data.data.firstOrNull())
+            }
+
+            override fun onError(exception: TruvideoSdkMediaException) {
+                callback.onError(exception)
+            }
+
+        }
+        fetchAllMedia(null, listOf(id), null, internalCallback)
+    }
+
+    override suspend fun getById(id: String): TruvideoSdkMediaResponse? {
+        return fetchAllMedia(null, listOf(id), null).data.firstOrNull()
+    }
+
+    override fun search(
+        tags: Map<String, String>?,
+        type: String?,
+        callback: TruvideoSdkMediaCallback<TruvideoSdkPaginatedResponse<TruvideoSdkMediaResponse>>
+    ) {
+        fetchAllMedia(tags, null, type, callback)
+    }
+
+    override suspend fun search(
+        tags: Map<String, String>?, type: String?
+    ): TruvideoSdkPaginatedResponse<TruvideoSdkMediaResponse> {
+        return fetchAllMedia(tags, null, type)
+    }
+
+    private fun fetchAllMedia(
+        tags: Map<String, String>?,
+        idList: List<String>?,
+        type: String?,
+        callback: TruvideoSdkMediaCallback<TruvideoSdkPaginatedResponse<TruvideoSdkMediaResponse>>
+    ) {
+        scope.launch {
+            try {
+                val data = fetchAllMedia(tags, idList, type)
+                callback.onComplete(data)
+            } catch (exception: Exception) {
+                exception.printStackTrace()
+                callback.onError(TruvideoSdkMediaException(exception.message ?: "Unknown message"))
+            }
+        }
+    }
+
+    private suspend fun fetchAllMedia(
+        tags: Map<String, String>?, idList: List<String>?, type: String?
+    ): TruvideoSdkPaginatedResponse<TruvideoSdkMediaResponse> {
+        authAdapter.validateAuthentication()
+
+        return mediaFileUploadRequestRepository.fetchAll(tags, idList, type)
     }
 
     override val environment: String

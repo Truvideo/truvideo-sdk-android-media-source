@@ -1,7 +1,6 @@
 package com.truvideo.sdk.media.repository
 
 import android.content.Context
-import android.util.Log
 import androidx.lifecycle.LiveData
 import com.truvideo.sdk.media.data.DatabaseInstance
 import com.truvideo.sdk.media.data.FileUploadRequestDAO
@@ -10,6 +9,9 @@ import com.truvideo.sdk.media.exception.TruvideoSdkMediaException
 import com.truvideo.sdk.media.model.TruVideoSdkMediaFileUploadResponse
 import com.truvideo.sdk.media.model.TruvideoSdkMediaFileUploadRequest
 import com.truvideo.sdk.media.model.TruvideoSdkMediaFileUploadStatus
+import com.truvideo.sdk.media.model.TruvideoSdkMediaResponse
+import com.truvideo.sdk.media.model.TruvideoSdkPaginatedResponse
+import com.truvideo.sdk.media.service.media.TruvideoSdkMediaServiceImpl
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -17,7 +19,7 @@ import java.util.Date
 import kotlin.coroutines.suspendCoroutine
 
 internal class TruvideoSdkMediaFileUploadRequestRepositoryImpl(
-    private val context: Context
+    private val context: Context, val mediaService: TruvideoSdkMediaServiceImpl
 ) : TruvideoSdkMediaFileUploadRequestRepository {
 
     private val scope = CoroutineScope(Dispatchers.IO)
@@ -67,11 +69,7 @@ internal class TruvideoSdkMediaFileUploadRequestRepositoryImpl(
     }
 
     override suspend fun updateToUploading(
-        id: String,
-        poolId: String,
-        region: String,
-        bucketName: String,
-        folder: String
+        id: String, poolId: String, region: String, bucketName: String, folder: String
     ): TruvideoSdkMediaFileUploadRequest {
         val model = getById(id) ?: throw TruvideoSdkMediaException("Media not found")
 
@@ -219,6 +217,22 @@ internal class TruvideoSdkMediaFileUploadRequestRepositoryImpl(
         }
     }
 
+    override suspend fun fetchAll(
+        tags: Map<String, String>?, idList: List<String>?, type: String?
+    ): TruvideoSdkPaginatedResponse<TruvideoSdkMediaResponse> {
+
+        return suspendCoroutine { cont ->
+            scope.launch {
+                try {
+                    val data = mediaService.fetchAll(tags, idList, type)
+                    cont.resumeWith(Result.success(data))
+                } catch (exception: Exception) {
+                    exception.printStackTrace()
+                    cont.resumeWith(Result.failure(exception))
+                }
+            }
+        }
+    }
 
     override suspend fun streamById(id: String): LiveData<TruvideoSdkMediaFileUploadRequest?> {
         return suspendCoroutine { cont ->
@@ -238,7 +252,8 @@ internal class TruvideoSdkMediaFileUploadRequestRepositoryImpl(
         return suspendCoroutine { cont ->
             scope.launch {
                 try {
-                    val stream = if (status != null) dao.streamAllByStatus(status) else dao.streamAll()
+                    val stream =
+                        if (status != null) dao.streamAllByStatus(status) else dao.streamAll()
                     cont.resumeWith(Result.success(stream))
                 } catch (exception: Exception) {
                     exception.printStackTrace()

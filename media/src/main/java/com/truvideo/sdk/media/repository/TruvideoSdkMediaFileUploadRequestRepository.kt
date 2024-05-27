@@ -4,6 +4,8 @@ import androidx.lifecycle.LiveData
 import com.truvideo.sdk.media.model.TruVideoSdkMediaFileUploadResponse
 import com.truvideo.sdk.media.model.TruvideoSdkMediaFileUploadRequest
 import com.truvideo.sdk.media.model.TruvideoSdkMediaFileUploadStatus
+import com.truvideo.sdk.media.model.TruvideoSdkMediaResponse
+import com.truvideo.sdk.media.model.TruvideoSdkPaginatedResponse
 
 interface TruvideoSdkMediaFileUploadRequestRepository {
 
@@ -14,11 +16,7 @@ interface TruvideoSdkMediaFileUploadRequestRepository {
     suspend fun updateToIdle(id: String): TruvideoSdkMediaFileUploadRequest
 
     suspend fun updateToUploading(
-        id: String,
-        poolId: String,
-        region: String,
-        bucketName: String,
-        folder: String
+        id: String, poolId: String, region: String, bucketName: String, folder: String
     ): TruvideoSdkMediaFileUploadRequest
 
     suspend fun updateToSynchronizing(id: String)
@@ -36,6 +34,10 @@ interface TruvideoSdkMediaFileUploadRequestRepository {
     suspend fun getById(id: String): TruvideoSdkMediaFileUploadRequest?
 
     suspend fun getAll(status: TruvideoSdkMediaFileUploadStatus? = null): List<TruvideoSdkMediaFileUploadRequest>
+
+    suspend fun fetchAll(
+        tags: Map<String, String>?, idList: List<String>?, type: String?
+    ): TruvideoSdkPaginatedResponse<TruvideoSdkMediaResponse>
 
     suspend fun streamById(id: String): LiveData<TruvideoSdkMediaFileUploadRequest?>
 
