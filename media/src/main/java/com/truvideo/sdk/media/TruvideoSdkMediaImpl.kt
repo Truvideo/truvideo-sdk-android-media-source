@@ -153,36 +153,41 @@ internal class TruvideoSdkMediaImpl(
             }
 
         }
-        fetchAllMedia(null, listOf(id), null, internalCallback)
+        fetchAllMedia(null, listOf(id), null, null, null, internalCallback)
     }
 
     override suspend fun getById(id: String): TruvideoSdkMediaResponse? {
-        return fetchAllMedia(null, listOf(id), null).data.firstOrNull()
+        return fetchAllMedia(null, listOf(id), null, null, null).data.firstOrNull()
     }
 
     override fun search(
         tags: Map<String, String>?,
         type: String?,
+        pageNumber: Int?,
+        size: Int?,
         callback: TruvideoSdkMediaCallback<TruvideoSdkPaginatedResponse<TruvideoSdkMediaResponse>>
     ) {
-        fetchAllMedia(tags, null, type, callback)
+        fetchAllMedia(tags, null, type, pageNumber, size, callback)
     }
 
     override suspend fun search(
-        tags: Map<String, String>?, type: String?
+        tags: Map<String, String>?, type: String?, pageNumber: Int?,
+        size: Int?,
     ): TruvideoSdkPaginatedResponse<TruvideoSdkMediaResponse> {
-        return fetchAllMedia(tags, null, type)
+        return fetchAllMedia(tags, null, type, pageNumber, size)
     }
 
     private fun fetchAllMedia(
         tags: Map<String, String>?,
         idList: List<String>?,
         type: String?,
+        pageNumber: Int?,
+        size: Int?,
         callback: TruvideoSdkMediaCallback<TruvideoSdkPaginatedResponse<TruvideoSdkMediaResponse>>
     ) {
         scope.launch {
             try {
-                val data = fetchAllMedia(tags, idList, type)
+                val data = fetchAllMedia(tags, idList, type, pageNumber, size)
                 callback.onComplete(data)
             } catch (exception: Exception) {
                 exception.printStackTrace()
@@ -192,11 +197,15 @@ internal class TruvideoSdkMediaImpl(
     }
 
     private suspend fun fetchAllMedia(
-        tags: Map<String, String>?, idList: List<String>?, type: String?
+        tags: Map<String, String>?,
+        idList: List<String>?,
+        type: String?,
+        pageNumber: Int?,
+        size: Int?
     ): TruvideoSdkPaginatedResponse<TruvideoSdkMediaResponse> {
         authAdapter.validateAuthentication()
 
-        return mediaFileUploadRequestRepository.fetchAll(tags, idList, type)
+        return mediaFileUploadRequestRepository.fetchAll(tags, idList, type, pageNumber, size)
     }
 
     override val environment: String

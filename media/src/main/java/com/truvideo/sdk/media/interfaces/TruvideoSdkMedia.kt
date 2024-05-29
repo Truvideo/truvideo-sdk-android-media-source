@@ -50,11 +50,16 @@ interface TruvideoSdkMedia {
     fun search(
         tags: Map<String, String>? = null,
         type: String? = null,
+        pageNumber: Int?,
+        size: Int?,
         callback: TruvideoSdkMediaCallback<TruvideoSdkPaginatedResponse<TruvideoSdkMediaResponse>>
     )
 
     suspend fun search(
-        tags: Map<String, String>? = null, type: String? = null
+        tags: Map<String, String>? = null,
+        type: String? = null,
+        pageNumber: Int?,
+        size: Int?,
     ): TruvideoSdkPaginatedResponse<TruvideoSdkMediaResponse>
 
     val environment: String

@@ -36,7 +36,11 @@ interface TruvideoSdkMediaFileUploadRequestRepository {
     suspend fun getAll(status: TruvideoSdkMediaFileUploadStatus? = null): List<TruvideoSdkMediaFileUploadRequest>
 
     suspend fun fetchAll(
-        tags: Map<String, String>?, idList: List<String>?, type: String?
+        tags: Map<String, String>?,
+        idList: List<String>?,
+        type: String?,
+        pageNumber: Int?,
+        size: Int?
     ): TruvideoSdkPaginatedResponse<TruvideoSdkMediaResponse>
 
     suspend fun streamById(id: String): LiveData<TruvideoSdkMediaFileUploadRequest?>

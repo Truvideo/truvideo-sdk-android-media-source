@@ -11,6 +11,7 @@ import org.json.JSONObject
 import truvideo.sdk.common.exception.TruvideoSdkException
 import truvideo.sdk.common.model.baseUrl
 import truvideo.sdk.common.sdk_common
+import kotlin.math.min
 
 internal class TruvideoSdkMediaServiceImpl(
     private val authAdapter: TruvideoSdkMediaAuthAdapter
@@ -63,7 +64,11 @@ internal class TruvideoSdkMediaServiceImpl(
     }
 
     override suspend fun fetchAll(
-        tags: Map<String, String>?, idList: List<String>?, type: String?
+        tags: Map<String, String>?,
+        idList: List<String>?,
+        type: String?,
+        pageNumber: Int?,
+        size: Int?
     ): TruvideoSdkPaginatedResponse<TruvideoSdkMediaResponse> {
         authAdapter.validateAuthentication()
         authAdapter.refresh()
@@ -88,8 +93,13 @@ internal class TruvideoSdkMediaServiceImpl(
             }
         }
 
+        val pageSize = if (size == null) {
+            "20"
+        } else {
+            "${min(100, size)}"
+        }
         val response = sdk_common.http.post(
-            url = "${sdk_common.configuration.environment.baseUrl}/api/media/search",
+            url = "${sdk_common.configuration.environment.baseUrl}/api/media/search?page=$pageNumber&size=$pageSize",
             headers = headers,
             retry = true,
             body = body.toString()

@@ -218,13 +218,17 @@ internal class TruvideoSdkMediaFileUploadRequestRepositoryImpl(
     }
 
     override suspend fun fetchAll(
-        tags: Map<String, String>?, idList: List<String>?, type: String?
+        tags: Map<String, String>?,
+        idList: List<String>?,
+        type: String?,
+        pageNumber: Int?,
+        size: Int?
     ): TruvideoSdkPaginatedResponse<TruvideoSdkMediaResponse> {
 
         return suspendCoroutine { cont ->
             scope.launch {
                 try {
-                    val data = mediaService.fetchAll(tags, idList, type)
+                    val data = mediaService.fetchAll(tags, idList, type, pageNumber, size)
                     cont.resumeWith(Result.success(data))
                 } catch (exception: Exception) {
                     exception.printStackTrace()

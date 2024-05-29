@@ -15,6 +15,10 @@ internal interface TruvideoSdkMediaService {
     ): TruVideoSdkMediaFileUploadResponse
 
     suspend fun fetchAll(
-        tags: Map<String, String>?, idList: List<String>?, type: String?
+        tags: Map<String, String>?,
+        idList: List<String>?,
+        type: String?,
+        pageNumber: Int? = 0,
+        size: Int?
     ): TruvideoSdkPaginatedResponse<TruvideoSdkMediaResponse>
 }
