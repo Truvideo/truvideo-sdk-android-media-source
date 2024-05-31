@@ -93,16 +93,10 @@ internal class TruvideoSdkMediaServiceImpl(
             }
         }
 
-        val pageSize = if (size == null) {
-            "20"
-        } else {
-            "${min(100, size)}"
-        }
+        val baseUrl = sdk_common.configuration.environment.baseUrl
+        val url = buildSearchUrl(baseUrl, pageNumber, size)
         val response = sdk_common.http.post(
-            url = "${sdk_common.configuration.environment.baseUrl}/api/media/search?page=$pageNumber&size=$pageSize",
-            headers = headers,
-            retry = true,
-            body = body.toString()
+            url = url, headers = headers, retry = true, body = body.toString()
         )
 
         if (response == null || !response.isSuccess) {
@@ -130,5 +124,13 @@ internal class TruvideoSdkMediaServiceImpl(
             empty = json.getBoolean("empty"),
             last = json.getInt("number") == json.getInt("totalPages"),
         )
+    }
+
+    companion object {
+        fun buildSearchUrl(baseUrl: String, pageNumber: Int?, pageSize: Int?): String {
+            val resolvedPageNumber = pageNumber ?: 0
+            val resolvedPageSize = min(100, pageSize ?: 20)
+            return "$baseUrl/api/media/search?page=$resolvedPageNumber&size=$resolvedPageSize"
+        }
     }
 }
