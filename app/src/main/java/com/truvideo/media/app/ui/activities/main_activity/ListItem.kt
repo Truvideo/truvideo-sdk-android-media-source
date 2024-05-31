@@ -1,206 +1,133 @@
-package com.truvideo.media.app
+package com.truvideo.media.app.ui.activities.main_activity
 
-import android.Manifest
 import android.app.AlertDialog
-import android.os.Build
-import android.os.Bundle
 import android.util.Log
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.compose.setContent
-import androidx.activity.result.PickVisualMediaRequest
-import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.KeyboardArrowDown
+import androidx.compose.material.icons.outlined.KeyboardArrowUp
 import androidx.compose.material3.Card
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.rememberMultiplePermissionsState
-import com.truvideo.media.app.ui.theme.TruvideosdkmediaTheme
-import com.truvideo.media.app.utils.RealPathUtil
-import com.truvideo.sdk.media.TruvideoSdkMedia
+import com.truvideo.sdk.components.button.TruvideoButton
+import com.truvideo.sdk.components.scale_button.TruvideoScaleButton
+import com.truvideo.sdk.media.exception.TruvideoSdkMediaException
 import com.truvideo.sdk.media.interfaces.TruvideoSdkMediaFileUploadCallback
 import com.truvideo.sdk.media.model.TruvideoSdkMediaFileUploadRequest
 import kotlinx.coroutines.launch
-import truvideo.sdk.common.exception.TruvideoSdkException
-import truvideo.sdk.common.sdk_common
-import truvideo.sdk.components.button.TruvideoButton
-import java.io.File
 
-class MainActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContent {
-            TruvideosdkmediaTheme {
-                // A surface container using the 'background' color from the theme
-                Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-                    Content()
-                }
-            }
-        }
+@Composable
+fun ListItem(request: TruvideoSdkMediaFileUploadRequest) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var infoVisible by remember { mutableStateOf(true) }
+
+    fun showError(error: String) {
+        AlertDialog.Builder(context)
+            .setMessage(error)
+            .show()
     }
 
-    @OptIn(ExperimentalPermissionsApi::class)
-    @Composable
-    fun Content() {
-        val context = LocalContext.current
-        val lifecycleOwner = LocalLifecycleOwner.current
-        val scope = rememberCoroutineScope()
-
-        val permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            listOf(
-                Manifest.permission.READ_MEDIA_VIDEO,
-                Manifest.permission.READ_MEDIA_IMAGES,
-            )
-        } else {
-            listOf(
-                Manifest.permission.READ_EXTERNAL_STORAGE,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE
-            )
+    TruvideoScaleButton(
+        onPressed = {
+            infoVisible = !infoVisible
         }
+    ) {
+        Card(Modifier.fillMaxWidth()) {
+            Column(
+                Modifier.padding(8.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Text(request.id, style = MaterialTheme.typography.bodyMedium)
+                        Text(request.filePath, style = MaterialTheme.typography.bodySmall)
+                    }
 
-        val permissionStatus = rememberMultiplePermissionsState(permissions)
-        LaunchedEffect(Unit) {
-            if (!permissionStatus.allPermissionsGranted) {
-                permissionStatus.launchMultiplePermissionRequest()
-            }
-        }
+                    Box(
+                        Modifier
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(MaterialTheme.colorScheme.background)
+                            .padding(horizontal = 4.dp, vertical = 2.dp)
+                    ) {
+                        Text(request.status.name)
+                    }
 
-        var requests by remember { mutableStateOf(listOf<TruvideoSdkMediaFileUploadRequest>()) }
-
-        val filePickerLauncher = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) {
-            val uri = it
-            if (uri == null) {
-                Log.d("TruvideoSdkMedia", "Uri null")
-                return@rememberLauncherForActivityResult
-            }
-
-            val path = RealPathUtil.realPathFromUri(context, uri) ?: ""
-            if (path.trim().isEmpty()) {
-                Log.d("TruvideoSdkMedia", "Path is empty")
-                return@rememberLauncherForActivityResult
-            }
-
-            val file = File(path)
-
-            if (file.exists()) {
-                scope.launch {
-                    val builder = TruvideoSdkMedia.FileUploadRequestBuilder(path)
-                    builder.addTag("key", "value")
-                    builder.addTag("color", "red")
-                    builder.addTag("order-id", "123")
-
-                    val metadata = mapOf(
-                        "key" to "value",
-                        "key2" to 2,
-                        "nested" to mapOf(
-                            "key3" to 3,
-                            "key4" to "value4"
-                        )
+                    Icon(
+                        imageVector = if (infoVisible) Icons.Outlined.KeyboardArrowUp else Icons.Outlined.KeyboardArrowDown,
+                        contentDescription = "",
+                        modifier = Modifier.padding(start = 8.dp)
                     )
-
-                    builder.setMetadata(metadata)
-                    builder.build()
                 }
-            } else {
-                Log.d("TruvideoSdkMedia", "File do not exists. $path")
-            }
-        }
-
-        LaunchedEffect(Unit) {
-            TruvideoSdkMedia.streamAllFileUploadRequests().observe(lifecycleOwner) {
-                requests = it
-            }
-
-            Log.d("JOSE", "isAuthenticated: ${sdk_common.auth.isInitialized.value}")
-        }
 
 
-        fun showError(error: String) {
-            AlertDialog.Builder(context)
-                .setMessage(error)
-                .show()
-        }
-
-
-        Column {
-            Column(Modifier.padding(16.dp)) {
-                TruvideoButton(
-                    text = "Pick file",
-                    onPressed = { filePickerLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageAndVideo)) }
-                )
-            }
-
-            LazyColumn(contentPadding = PaddingValues(16.dp)) {
-                items(requests, key = { it.id }) {
-                    Card(Modifier.padding(bottom = 8.dp)) {
-                        Column(Modifier.padding(8.dp)) {
-                            Row {
-                                Text(it.id, fontSize = 10.sp, modifier = Modifier.weight(1f))
-                                Text(it.status.name)
-                            }
-
+                Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .animateContentSize { _, _ -> }) {
+                    if (infoVisible) {
+                        Column {
                             Text("Created At", fontSize = 10.sp, fontWeight = FontWeight.W500)
-                            Text("${it.createdAt}", fontSize = 10.sp)
+                            Text("${request.createdAt}", fontSize = 10.sp)
 
                             Text("Updated At", fontSize = 10.sp, fontWeight = FontWeight.W500)
-                            Text("${it.updatedAt}", fontSize = 10.sp)
+                            Text("${request.updatedAt}", fontSize = 10.sp)
 
-                            if (it.uploadProgress != null) {
+                            if (request.uploadProgress != null) {
                                 Text("Progress", fontSize = 10.sp, fontWeight = FontWeight.W500)
-                                Text("${(it.uploadProgress!! * 100)}%", fontSize = 10.sp)
+                                Text("${(request.uploadProgress!! * 100)}%", fontSize = 10.sp)
                             }
 
-                            if (it.remoteId != null) {
+                            if (request.remoteId != null) {
                                 Text("Remote ID", fontSize = 10.sp, fontWeight = FontWeight.W500)
-                                Text("${it.remoteId}", fontSize = 10.sp)
+                                Text("${request.remoteId}", fontSize = 10.sp)
                             }
 
-                            if (it.remoteUrl != null) {
+                            if (request.remoteUrl != null) {
                                 Text("Remote URL", fontSize = 10.sp, fontWeight = FontWeight.W500)
-                                Text("${it.remoteUrl}", fontSize = 10.sp)
+                                Text("${request.remoteUrl}", fontSize = 10.sp)
                             }
 
-                            if (it.transcriptionUrl != null) {
+                            if (request.transcriptionUrl != null) {
                                 Text("Transcription URL", fontSize = 10.sp, fontWeight = FontWeight.W500)
-                                Text("${it.transcriptionUrl}", fontSize = 10.sp)
+                                Text("${request.transcriptionUrl}", fontSize = 10.sp)
                             }
 
-                            if (it.tags.entries.isNotEmpty()) {
+                            if (request.tags.entries.isNotEmpty()) {
                                 Text("Tags", fontSize = 10.sp, fontWeight = FontWeight.W500)
-                                it.tags.entries.forEach {
+                                request.tags.entries.forEach {
                                     Text("${it.key} = ${it.value}", fontSize = 10.sp)
                                 }
                             }
 
-                            if (it.metadata.entries.isNotEmpty()) {
+                            if (request.metadata.entries.isNotEmpty()) {
                                 Text("Metadata", fontSize = 10.sp, fontWeight = FontWeight.W500)
-                                it.metadata.entries.forEach {
+                                request.metadata.entries.forEach {
                                     if (it.value is Map<*, *>) {
                                         Text("${it.key} = ", fontSize = 10.sp)
                                         (it.value as Map<*, *>).entries.forEach { nested ->
@@ -216,6 +143,8 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
 
+                            Box(Modifier.height(16.dp))
+
                             Row(
                                 Modifier
                                     .fillMaxWidth()
@@ -226,7 +155,7 @@ class MainActivity : ComponentActivity() {
                                     onPressed = {
                                         scope.launch {
                                             try {
-                                                it.upload(
+                                                request.upload(
                                                     object : TruvideoSdkMediaFileUploadCallback {
 
                                                         override fun onComplete(
@@ -248,7 +177,7 @@ class MainActivity : ComponentActivity() {
 
                                                         override fun onError(
                                                             id: String,
-                                                            ex: TruvideoSdkException
+                                                            ex: TruvideoSdkMediaException
                                                         ) {
                                                             Log.d("TruvideoSdkMedia", "$id $ex")
                                                         }
@@ -269,7 +198,7 @@ class MainActivity : ComponentActivity() {
                                     onPressed = {
                                         scope.launch {
                                             try {
-                                                it.pause()
+                                                request.pause()
                                             } catch (exception: Exception) {
                                                 exception.printStackTrace()
                                                 showError(exception.localizedMessage ?: "Uknown error")
@@ -285,7 +214,7 @@ class MainActivity : ComponentActivity() {
                                     onPressed = {
                                         scope.launch {
                                             try {
-                                                it.resume()
+                                                request.resume()
                                             } catch (exception: Exception) {
                                                 exception.printStackTrace()
                                                 showError(exception.localizedMessage ?: "Uknown error")
@@ -301,7 +230,7 @@ class MainActivity : ComponentActivity() {
                                     onPressed = {
                                         scope.launch {
                                             try {
-                                                it.cancel()
+                                                request.cancel()
                                             } catch (exception: Exception) {
                                                 exception.printStackTrace()
                                                 showError(exception.localizedMessage ?: "Uknown error")
@@ -317,7 +246,7 @@ class MainActivity : ComponentActivity() {
                                     onPressed = {
                                         scope.launch {
                                             try {
-                                                it.delete()
+                                                request.delete()
                                             } catch (exception: Exception) {
                                                 exception.printStackTrace()
                                                 showError(exception.localizedMessage ?: "Uknown error")
@@ -328,8 +257,23 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                     }
+
+
                 }
             }
         }
     }
+}
+
+@Composable
+@Preview(showBackground = true)
+private fun Test() {
+    val request = remember {
+        TruvideoSdkMediaFileUploadRequest(
+            id = "id",
+            filePath = "file-path"
+        )
+    }
+
+    ListItem(request)
 }

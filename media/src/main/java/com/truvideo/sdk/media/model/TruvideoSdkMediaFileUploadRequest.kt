@@ -29,12 +29,22 @@ data class TruvideoSdkMediaFileUploadRequest(
     var uploadProgress: Float? = null,
     var transcriptionUrl: String? = null,
     var transcriptionLength: Float? = null,
+    var deleteOnComplete: Boolean = false,
 
-    @TypeConverters(TagsConverter::class) var tags: Map<String, String> = mapOf(),
-    @TypeConverters(MetadataConverter::class) var metadata: Map<String, Any?> = mapOf(),
-    @TypeConverters(TruvideoSdkMediaFileUploadStatusConverter::class) var status: TruvideoSdkMediaFileUploadStatus = TruvideoSdkMediaFileUploadStatus.IDLE,
-    @TypeConverters(DateConverter::class) val createdAt: Date = Date(),
-    @TypeConverters(DateConverter::class) var updatedAt: Date = Date(),
+    @TypeConverters(TagsConverter::class)
+    var tags: Map<String, String> = mapOf(),
+
+    @TypeConverters(MetadataConverter::class)
+    var metadata: Map<String, Any?> = mapOf(),
+
+    @TypeConverters(TruvideoSdkMediaFileUploadStatusConverter::class)
+    var status: TruvideoSdkMediaFileUploadStatus = TruvideoSdkMediaFileUploadStatus.IDLE,
+
+    @TypeConverters(DateConverter::class)
+    val createdAt: Date = Date(),
+
+    @TypeConverters(DateConverter::class)
+    var updatedAt: Date = Date(),
 
     internal var externalId: Int? = null,
     internal var bucketName: String = "",

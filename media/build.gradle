@@ -63,12 +63,8 @@ android {
 
 dependencies {
     implementation "androidx.startup:startup-runtime:1.1.1"
-
-    implementation 'androidx.core:core-ktx:1.13.1'
-    implementation 'androidx.lifecycle:lifecycle-extensions:2.2.0'
-    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.8.0'
-    implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.8.0'
     implementation 'org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0'
+    implementation 'androidx.core:core-ktx:1.13.1'
 
     // Common
     var commonVersion = properties.getProperty("commonVersion")

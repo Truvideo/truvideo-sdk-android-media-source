@@ -12,7 +12,7 @@ import com.truvideo.sdk.media.model.TruvideoSdkMediaFileUploadRequest
 @Database(
     entities = [TruvideoSdkMediaFileUploadRequest::class],
     autoMigrations = [],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 

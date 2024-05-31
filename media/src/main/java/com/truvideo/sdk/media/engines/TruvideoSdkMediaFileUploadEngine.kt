@@ -115,16 +115,18 @@ internal class TruvideoSdkMediaFileUploadEngine(
                                     if (response != null) {
                                         callback.onComplete(entity.id, response)
                                     }
+
+                                    if (entity.deleteOnComplete) {
+                                        repository.delete(id)
+                                    }
+
                                 } catch (exception: Exception) {
                                     exception.printStackTrace()
-
-                                    val message =
-                                        if (exception is TruvideoSdkException) exception.message else "Unknown error"
-                                    val externalException = TruvideoSdkMediaException(message)
+                                    val message = exception.localizedMessage ?: "Unknown error"
 
                                     // Move to error
                                     repository.updateToError(id, message)
-                                    callback.onError(entity.id, externalException)
+                                    callback.onError(entity.id, TruvideoSdkMediaException(message))
                                 }
                             }
                         }
@@ -144,14 +146,11 @@ internal class TruvideoSdkMediaFileUploadEngine(
             repository.update(entity.apply { externalId = s3Id })
         } catch (exception: Exception) {
             exception.printStackTrace()
-
-            val message =
-                if (exception is TruvideoSdkException) exception.message else "Unknown error"
-            val externalException = TruvideoSdkMediaException(message)
+            val message = exception.localizedMessage ?: "Unknown error"
 
             // Move to error
             repository.updateToError(id, message)
-            callback.onError(entity.id, externalException)
+            callback.onError(entity.id, TruvideoSdkMediaException(message))
         }
     }
 

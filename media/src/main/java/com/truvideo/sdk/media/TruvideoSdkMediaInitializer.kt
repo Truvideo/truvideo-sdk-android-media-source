@@ -37,7 +37,7 @@ class TruvideoSdkMediaInitializer : Initializer<Unit> {
             TruvideoSdkMedia = TruvideoSdkMediaImpl(
                 authAdapter = authAdapter,
                 mediaFileUploadRequestRepository = mediaFileUploadRequestRepository,
-                fileUploadEngine = fileUploadEngine,
+                fileUploadEngine = fileUploadEngine
             )
         }
     }

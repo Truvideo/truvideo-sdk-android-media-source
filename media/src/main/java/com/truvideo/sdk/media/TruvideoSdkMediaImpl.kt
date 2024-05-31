@@ -20,7 +20,7 @@ import kotlinx.coroutines.launch
 internal class TruvideoSdkMediaImpl(
     private val authAdapter: TruvideoSdkMediaAuthAdapter,
     private val mediaFileUploadRequestRepository: TruvideoSdkMediaFileUploadRequestRepository,
-    private val fileUploadEngine: TruvideoSdkMediaFileUploadEngine,
+    private val fileUploadEngine: TruvideoSdkMediaFileUploadEngine
 ) : TruvideoSdkMedia {
 
     private var scope = CoroutineScope(Dispatchers.IO)
@@ -78,7 +78,6 @@ internal class TruvideoSdkMediaImpl(
     override fun getFileUploadRequestById(
         id: String, callback: TruvideoSdkMediaCallback<TruvideoSdkMediaFileUploadRequest?>
     ) {
-
         scope.launch {
             try {
                 val request = getFileUploadRequestById(id)
