@@ -9,7 +9,6 @@ import com.truvideo.sdk.media.model.TruvideoSdkPaginatedResponse
 import org.json.JSONArray
 import org.json.JSONObject
 import truvideo.sdk.common.exception.TruvideoSdkException
-import truvideo.sdk.common.model.baseUrl
 import truvideo.sdk.common.sdk_common
 import kotlin.math.min
 

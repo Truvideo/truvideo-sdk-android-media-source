@@ -68,7 +68,7 @@ dependencies {
 
     // Common
     var commonVersion = properties.getProperty("commonVersion")
-    implementation("com.github.Truvideo:truvideo-sdk-android-common:$commonVersion")
+    implementation("com.github.truvideo:truvideo-sdk-android-common:$commonVersion")
 
     // S3
     implementation 'com.amazonaws:aws-android-sdk-mobile-client:2.16.6'
