@@ -5,6 +5,7 @@ import androidx.startup.Initializer
 import com.truvideo.sdk.media.adapter.AuthAdapterImpl
 import com.truvideo.sdk.media.adapter.VersionPropertiesAdapter
 import com.truvideo.sdk.media.engines.TruvideoSdkMediaFileUploadEngine
+import com.truvideo.sdk.media.repository.TruvideoSdkMediaFetchRequestRepositoryImpl
 import com.truvideo.sdk.media.repository.TruvideoSdkMediaFileUploadRequestRepositoryImpl
 import com.truvideo.sdk.media.service.media.TruvideoSdkMediaServiceImpl
 import com.truvideo.sdk.media.usecases.S3ClientUseCase
@@ -17,14 +18,18 @@ class TruvideoSdkMediaInitializer : Initializer<Unit> {
         fun init(context: Context) {
             val versionPropertiesAdapter = VersionPropertiesAdapter(context)
             val authAdapter = AuthAdapterImpl(versionPropertiesAdapter)
-            val mediaFileUploadRequestRepository = TruvideoSdkMediaFileUploadRequestRepositoryImpl(context)
-            val s3ClientUseCase = S3ClientUseCase(context)
             val mediaService = TruvideoSdkMediaServiceImpl(
                 authAdapter = authAdapter
             )
+            val mediaFileUploadRequestRepository = TruvideoSdkMediaFileUploadRequestRepositoryImpl(
+                context, mediaService = mediaService
+            )
+            val mediaFetchRequestRepository = TruvideoSdkMediaFetchRequestRepositoryImpl(
+                mediaService = mediaService
+            )
+            val s3ClientUseCase = S3ClientUseCase(context)
             val uploadFileUseCase = UploadFileUseCase(
-                context = context,
-                s3ClientUseCase = s3ClientUseCase
+                context = context, s3ClientUseCase = s3ClientUseCase
             )
             val fileUploadEngine = TruvideoSdkMediaFileUploadEngine(
                 context = context,
@@ -36,6 +41,7 @@ class TruvideoSdkMediaInitializer : Initializer<Unit> {
             TruvideoSdkMedia = TruvideoSdkMediaImpl(
                 authAdapter = authAdapter,
                 mediaFileUploadRequestRepository = mediaFileUploadRequestRepository,
+                mediaFetchRequestRepository = mediaFetchRequestRepository,
                 fileUploadEngine = fileUploadEngine
             )
         }

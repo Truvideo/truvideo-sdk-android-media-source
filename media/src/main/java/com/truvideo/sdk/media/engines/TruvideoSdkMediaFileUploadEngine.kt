@@ -66,14 +66,17 @@ internal class TruvideoSdkMediaFileUploadEngine(
         )
 
         try {
-            val s3Id = uploadFileUseCase(
-                filePath = entity.filePath,
+            val s3Id = uploadFileUseCase(filePath = entity.filePath,
                 bucketName = entity.bucketName,
                 region = entity.region,
                 poolId = entity.poolId,
                 folder = entity.folder,
                 callback = object : FileUploadCallback {
-                    override fun onStateChanged(uploadId: Int, state: TruvideoSdkMediaFileUploadStatus, ex: TruvideoSdkException?) {
+                    override fun onStateChanged(
+                        uploadId: Int,
+                        state: TruvideoSdkMediaFileUploadStatus,
+                        ex: TruvideoSdkException?
+                    ) {
                         scope.launch {
                             mutex.withLock {
                                 if (state == TruvideoSdkMediaFileUploadStatus.ERROR) {
@@ -94,7 +97,8 @@ internal class TruvideoSdkMediaFileUploadEngine(
 
                                     // Create truvideo entity
                                     val file = File(entity.filePath)
-                                    val mimeType = FileUriUtil.getMimeType(context, Uri.fromFile(file))
+                                    val mimeType =
+                                        FileUriUtil.getMimeType(context, Uri.fromFile(file))
                                     val type = mimeType.split("/")[0].uppercase(Locale.ROOT)
                                     val media = mediaService.createMedia(
                                         title = file.name,
@@ -136,8 +140,7 @@ internal class TruvideoSdkMediaFileUploadEngine(
                             }
                         }
                     }
-                }
-            )
+                })
 
             // Update external id
             repository.update(entity.apply { externalId = s3Id })
@@ -152,7 +155,8 @@ internal class TruvideoSdkMediaFileUploadEngine(
     }
 
     suspend fun cancel(id: String) {
-        val entity = repository.getById(id) ?: throw TruvideoSdkException("File upload request not found")
+        val entity =
+            repository.getById(id) ?: throw TruvideoSdkException("File upload request not found")
 
         // Validate status
         val validStatus = listOf(
@@ -171,9 +175,7 @@ internal class TruvideoSdkMediaFileUploadEngine(
         val externalId = entity.externalId
         if (externalId != null) {
             uploadFileUseCase.cancel(
-                region = entity.region,
-                poolId = entity.poolId,
-                id = externalId
+                region = entity.region, poolId = entity.poolId, id = externalId
             )
         }
 
@@ -189,9 +191,7 @@ internal class TruvideoSdkMediaFileUploadEngine(
             val externalId = entity.externalId
             if (externalId != null) {
                 uploadFileUseCase.cancel(
-                    region = entity.region,
-                    poolId = entity.poolId,
-                    id = externalId
+                    region = entity.region, poolId = entity.poolId, id = externalId
                 )
             }
         }
@@ -201,7 +201,8 @@ internal class TruvideoSdkMediaFileUploadEngine(
     }
 
     suspend fun pause(id: String) {
-        val entity = repository.getById(id) ?: throw TruvideoSdkException("File upload request not found")
+        val entity =
+            repository.getById(id) ?: throw TruvideoSdkException("File upload request not found")
 
         // Validate status
         val validStatus = listOf(TruvideoSdkMediaFileUploadStatus.UPLOADING)
@@ -213,9 +214,7 @@ internal class TruvideoSdkMediaFileUploadEngine(
         // Pause s3
         val externalId = entity.externalId ?: throw TruvideoSdkException("Upload request not found")
         uploadFileUseCase.pause(
-            region = entity.region,
-            poolId = entity.poolId,
-            id = externalId
+            region = entity.region, poolId = entity.poolId, id = externalId
         )
 
         // Update to paused
@@ -224,7 +223,8 @@ internal class TruvideoSdkMediaFileUploadEngine(
     }
 
     suspend fun resume(id: String) {
-        val entity = repository.getById(id) ?: throw TruvideoSdkException("File upload request not found")
+        val entity =
+            repository.getById(id) ?: throw TruvideoSdkException("File upload request not found")
 
         // Valid status
         val validStatus = listOf(TruvideoSdkMediaFileUploadStatus.PAUSED)
@@ -236,9 +236,7 @@ internal class TruvideoSdkMediaFileUploadEngine(
         // Resume s3
         val externalId = entity.externalId ?: throw TruvideoSdkException("Upload request not found")
         uploadFileUseCase.resume(
-            region = entity.region,
-            poolId = entity.poolId,
-            id = externalId
+            region = entity.region, poolId = entity.poolId, id = externalId
         )
 
         // Update to uploading

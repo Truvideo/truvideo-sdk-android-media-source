@@ -4,8 +4,11 @@ package com.truvideo.sdk.media.interfaces
 
 import androidx.lifecycle.LiveData
 import com.truvideo.sdk.media.builder.TruvideoSdkMediaFileUploadRequestBuilder
+import com.truvideo.sdk.media.model.TruvideoSdkMediaFileType
 import com.truvideo.sdk.media.model.TruvideoSdkMediaFileUploadRequest
 import com.truvideo.sdk.media.model.TruvideoSdkMediaFileUploadStatus
+import com.truvideo.sdk.media.model.TruvideoSdkMediaResponse
+import com.truvideo.sdk.media.model.TruvideoSdkMediaPaginatedResponse
 
 interface TruvideoSdkMedia {
 
@@ -22,11 +25,12 @@ interface TruvideoSdkMedia {
 
     suspend fun getFileUploadRequestById(id: String): TruvideoSdkMediaFileUploadRequest?
 
-    fun getFileUploadRequestById(id: String, callback: TruvideoSdkMediaCallback<TruvideoSdkMediaFileUploadRequest?>)
+    fun getFileUploadRequestById(
+        id: String, callback: TruvideoSdkMediaCallback<TruvideoSdkMediaFileUploadRequest?>
+    )
 
     fun streamFileUploadRequestById(
-        id: String,
-        callback: TruvideoSdkMediaCallback<LiveData<TruvideoSdkMediaFileUploadRequest?>>
+        id: String, callback: TruvideoSdkMediaCallback<LiveData<TruvideoSdkMediaFileUploadRequest?>>
     )
 
     suspend fun streamFileUploadRequestById(id: String): LiveData<TruvideoSdkMediaFileUploadRequest?>
@@ -39,6 +43,25 @@ interface TruvideoSdkMedia {
     suspend fun getAllFileUploadRequests(
         status: TruvideoSdkMediaFileUploadStatus? = null,
     ): List<TruvideoSdkMediaFileUploadRequest>
+
+    fun getById(id: String, callback: TruvideoSdkMediaCallback<TruvideoSdkMediaResponse?>)
+
+    suspend fun getById(id: String): TruvideoSdkMediaResponse?
+
+    fun search(
+        tags: Map<String, String>? = null,
+        type: TruvideoSdkMediaFileType? = null,
+        pageNumber: Int?,
+        size: Int?,
+        callback: TruvideoSdkMediaCallback<TruvideoSdkMediaPaginatedResponse<TruvideoSdkMediaResponse>>
+    )
+
+    suspend fun search(
+        tags: Map<String, String>? = null,
+        type: TruvideoSdkMediaFileType? = null,
+        pageNumber: Int?,
+        size: Int?,
+    ): TruvideoSdkMediaPaginatedResponse<TruvideoSdkMediaResponse>
 
     val environment: String
 }

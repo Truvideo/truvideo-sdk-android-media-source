@@ -24,7 +24,7 @@ class LoginActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         TruvideoSdk.clearAuthentication()
-        sdk_common.configuration.environment = TruvideoSdkEnvironment.RC
+        sdk_common.configuration.environment = TruvideoSdkEnvironment.DEV
 
         setContent {
             TruvideosdkmediaTheme {
