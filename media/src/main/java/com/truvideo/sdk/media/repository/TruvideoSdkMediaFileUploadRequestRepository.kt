@@ -2,6 +2,7 @@ package com.truvideo.sdk.media.repository
 
 import androidx.lifecycle.LiveData
 import com.truvideo.sdk.media.model.TruVideoSdkMediaFileUploadResponse
+import com.truvideo.sdk.media.model.TruvideoSdkMediaFileType
 import com.truvideo.sdk.media.model.TruvideoSdkMediaFileUploadRequest
 import com.truvideo.sdk.media.model.TruvideoSdkMediaFileUploadStatus
 import com.truvideo.sdk.media.model.TruvideoSdkMediaResponse
@@ -34,14 +35,6 @@ interface TruvideoSdkMediaFileUploadRequestRepository {
     suspend fun getById(id: String): TruvideoSdkMediaFileUploadRequest?
 
     suspend fun getAll(status: TruvideoSdkMediaFileUploadStatus? = null): List<TruvideoSdkMediaFileUploadRequest>
-
-    suspend fun fetchAll(
-        tags: Map<String, String>?,
-        idList: List<String>?,
-        type: String?,
-        pageNumber: Int?,
-        size: Int?
-    ): TruvideoSdkMediaPaginatedResponse<TruvideoSdkMediaResponse>
 
     suspend fun streamById(id: String): LiveData<TruvideoSdkMediaFileUploadRequest?>
 

@@ -7,6 +7,7 @@ import com.truvideo.sdk.media.data.FileUploadRequestDAO
 import com.truvideo.sdk.media.data.converters.MetadataConverter
 import com.truvideo.sdk.media.exception.TruvideoSdkMediaException
 import com.truvideo.sdk.media.model.TruVideoSdkMediaFileUploadResponse
+import com.truvideo.sdk.media.model.TruvideoSdkMediaFileType
 import com.truvideo.sdk.media.model.TruvideoSdkMediaFileUploadRequest
 import com.truvideo.sdk.media.model.TruvideoSdkMediaFileUploadStatus
 import com.truvideo.sdk.media.model.TruvideoSdkMediaResponse
@@ -208,27 +209,6 @@ internal class TruvideoSdkMediaFileUploadRequestRepositoryImpl(
             scope.launch {
                 try {
                     val data = if (status != null) dao.getAllByStatus(status) else dao.getAll()
-                    cont.resumeWith(Result.success(data))
-                } catch (exception: Exception) {
-                    exception.printStackTrace()
-                    cont.resumeWith(Result.failure(exception))
-                }
-            }
-        }
-    }
-
-    override suspend fun fetchAll(
-        tags: Map<String, String>?,
-        idList: List<String>?,
-        type: String?,
-        pageNumber: Int?,
-        size: Int?
-    ): TruvideoSdkMediaPaginatedResponse<TruvideoSdkMediaResponse> {
-
-        return suspendCoroutine { cont ->
-            scope.launch {
-                try {
-                    val data = mediaService.fetchAll(tags, idList, type, pageNumber, size)
                     cont.resumeWith(Result.success(data))
                 } catch (exception: Exception) {
                     exception.printStackTrace()

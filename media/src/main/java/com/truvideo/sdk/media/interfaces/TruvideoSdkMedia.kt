@@ -4,6 +4,7 @@ package com.truvideo.sdk.media.interfaces
 
 import androidx.lifecycle.LiveData
 import com.truvideo.sdk.media.builder.TruvideoSdkMediaFileUploadRequestBuilder
+import com.truvideo.sdk.media.model.TruvideoSdkMediaFileType
 import com.truvideo.sdk.media.model.TruvideoSdkMediaFileUploadRequest
 import com.truvideo.sdk.media.model.TruvideoSdkMediaFileUploadStatus
 import com.truvideo.sdk.media.model.TruvideoSdkMediaResponse
@@ -49,7 +50,7 @@ interface TruvideoSdkMedia {
 
     fun search(
         tags: Map<String, String>? = null,
-        type: String? = null,
+        type: TruvideoSdkMediaFileType? = null,
         pageNumber: Int?,
         size: Int?,
         callback: TruvideoSdkMediaCallback<TruvideoSdkMediaPaginatedResponse<TruvideoSdkMediaResponse>>
@@ -57,7 +58,7 @@ interface TruvideoSdkMedia {
 
     suspend fun search(
         tags: Map<String, String>? = null,
-        type: String? = null,
+        type: TruvideoSdkMediaFileType? = null,
         pageNumber: Int?,
         size: Int?,
     ): TruvideoSdkMediaPaginatedResponse<TruvideoSdkMediaResponse>

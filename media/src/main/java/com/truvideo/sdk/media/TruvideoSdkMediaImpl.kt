@@ -8,10 +8,12 @@ import com.truvideo.sdk.media.exception.TruvideoSdkMediaException
 import com.truvideo.sdk.media.interfaces.TruvideoSdkMedia
 import com.truvideo.sdk.media.interfaces.TruvideoSdkMediaAuthAdapter
 import com.truvideo.sdk.media.interfaces.TruvideoSdkMediaCallback
+import com.truvideo.sdk.media.model.TruvideoSdkMediaFileType
 import com.truvideo.sdk.media.model.TruvideoSdkMediaFileUploadRequest
 import com.truvideo.sdk.media.model.TruvideoSdkMediaFileUploadStatus
 import com.truvideo.sdk.media.model.TruvideoSdkMediaResponse
 import com.truvideo.sdk.media.model.TruvideoSdkMediaPaginatedResponse
+import com.truvideo.sdk.media.repository.TruvideoSdkMediaFetchRequestRepository
 import com.truvideo.sdk.media.repository.TruvideoSdkMediaFileUploadRequestRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -20,6 +22,7 @@ import kotlinx.coroutines.launch
 internal class TruvideoSdkMediaImpl(
     private val authAdapter: TruvideoSdkMediaAuthAdapter,
     private val mediaFileUploadRequestRepository: TruvideoSdkMediaFileUploadRequestRepository,
+    private val mediaFetchRequestRepository: TruvideoSdkMediaFetchRequestRepository,
     private val fileUploadEngine: TruvideoSdkMediaFileUploadEngine
 ) : TruvideoSdkMedia {
 
@@ -161,7 +164,7 @@ internal class TruvideoSdkMediaImpl(
 
     override fun search(
         tags: Map<String, String>?,
-        type: String?,
+        type: TruvideoSdkMediaFileType?,
         pageNumber: Int?,
         size: Int?,
         callback: TruvideoSdkMediaCallback<TruvideoSdkMediaPaginatedResponse<TruvideoSdkMediaResponse>>
@@ -170,7 +173,7 @@ internal class TruvideoSdkMediaImpl(
     }
 
     override suspend fun search(
-        tags: Map<String, String>?, type: String?, pageNumber: Int?,
+        tags: Map<String, String>?, type: TruvideoSdkMediaFileType?, pageNumber: Int?,
         size: Int?,
     ): TruvideoSdkMediaPaginatedResponse<TruvideoSdkMediaResponse> {
         return fetchAllMedia(tags, null, type, pageNumber, size)
@@ -179,7 +182,7 @@ internal class TruvideoSdkMediaImpl(
     private fun fetchAllMedia(
         tags: Map<String, String>?,
         idList: List<String>?,
-        type: String?,
+        type: TruvideoSdkMediaFileType?,
         pageNumber: Int?,
         size: Int?,
         callback: TruvideoSdkMediaCallback<TruvideoSdkMediaPaginatedResponse<TruvideoSdkMediaResponse>>
@@ -198,13 +201,13 @@ internal class TruvideoSdkMediaImpl(
     private suspend fun fetchAllMedia(
         tags: Map<String, String>?,
         idList: List<String>?,
-        type: String?,
+        type: TruvideoSdkMediaFileType?,
         pageNumber: Int?,
         size: Int?
     ): TruvideoSdkMediaPaginatedResponse<TruvideoSdkMediaResponse> {
         authAdapter.validateAuthentication()
 
-        return mediaFileUploadRequestRepository.fetchAll(tags, idList, type, pageNumber, size)
+        return mediaFetchRequestRepository.fetchAll(tags, idList, type, pageNumber, size)
     }
 
     override val environment: String

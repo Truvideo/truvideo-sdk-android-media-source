@@ -4,6 +4,7 @@ import com.truvideo.sdk.media.data.converters.MetadataConverter
 import com.truvideo.sdk.media.exception.TruvideoSdkMediaException
 import com.truvideo.sdk.media.interfaces.TruvideoSdkMediaAuthAdapter
 import com.truvideo.sdk.media.model.TruVideoSdkMediaFileUploadResponse
+import com.truvideo.sdk.media.model.TruvideoSdkMediaFileType
 import com.truvideo.sdk.media.model.TruvideoSdkMediaResponse
 import com.truvideo.sdk.media.model.TruvideoSdkMediaPaginatedResponse
 import org.json.JSONArray
@@ -65,7 +66,7 @@ internal class TruvideoSdkMediaServiceImpl(
     override suspend fun fetchAll(
         tags: Map<String, String>?,
         idList: List<String>?,
-        type: String?,
+        type: TruvideoSdkMediaFileType?,
         pageNumber: Int?,
         size: Int?
     ): TruvideoSdkMediaPaginatedResponse<TruvideoSdkMediaResponse> {
@@ -87,7 +88,7 @@ internal class TruvideoSdkMediaServiceImpl(
             idList?.let {
                 put("ids", JSONArray(it))
             }
-            type?.let {
+            type?.type?.let {
                 put("type", it)
             }
         }
