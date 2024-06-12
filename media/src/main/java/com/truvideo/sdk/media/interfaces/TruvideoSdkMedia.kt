@@ -7,7 +7,7 @@ import com.truvideo.sdk.media.builder.TruvideoSdkMediaFileUploadRequestBuilder
 import com.truvideo.sdk.media.model.TruvideoSdkMediaFileUploadRequest
 import com.truvideo.sdk.media.model.TruvideoSdkMediaFileUploadStatus
 import com.truvideo.sdk.media.model.TruvideoSdkMediaResponse
-import com.truvideo.sdk.media.model.TruvideoSdkPaginatedResponse
+import com.truvideo.sdk.media.model.TruvideoSdkMediaPaginatedResponse
 
 interface TruvideoSdkMedia {
 
@@ -52,7 +52,7 @@ interface TruvideoSdkMedia {
         type: String? = null,
         pageNumber: Int?,
         size: Int?,
-        callback: TruvideoSdkMediaCallback<TruvideoSdkPaginatedResponse<TruvideoSdkMediaResponse>>
+        callback: TruvideoSdkMediaCallback<TruvideoSdkMediaPaginatedResponse<TruvideoSdkMediaResponse>>
     )
 
     suspend fun search(
@@ -60,7 +60,7 @@ interface TruvideoSdkMedia {
         type: String? = null,
         pageNumber: Int?,
         size: Int?,
-    ): TruvideoSdkPaginatedResponse<TruvideoSdkMediaResponse>
+    ): TruvideoSdkMediaPaginatedResponse<TruvideoSdkMediaResponse>
 
     val environment: String
 }

@@ -10,7 +10,7 @@ import com.truvideo.sdk.media.model.TruVideoSdkMediaFileUploadResponse
 import com.truvideo.sdk.media.model.TruvideoSdkMediaFileUploadRequest
 import com.truvideo.sdk.media.model.TruvideoSdkMediaFileUploadStatus
 import com.truvideo.sdk.media.model.TruvideoSdkMediaResponse
-import com.truvideo.sdk.media.model.TruvideoSdkPaginatedResponse
+import com.truvideo.sdk.media.model.TruvideoSdkMediaPaginatedResponse
 import com.truvideo.sdk.media.service.media.TruvideoSdkMediaServiceImpl
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -223,7 +223,7 @@ internal class TruvideoSdkMediaFileUploadRequestRepositoryImpl(
         type: String?,
         pageNumber: Int?,
         size: Int?
-    ): TruvideoSdkPaginatedResponse<TruvideoSdkMediaResponse> {
+    ): TruvideoSdkMediaPaginatedResponse<TruvideoSdkMediaResponse> {
 
         return suspendCoroutine { cont ->
             scope.launch {

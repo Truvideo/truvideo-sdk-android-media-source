@@ -5,7 +5,7 @@ import com.truvideo.sdk.media.model.TruVideoSdkMediaFileUploadResponse
 import com.truvideo.sdk.media.model.TruvideoSdkMediaFileUploadRequest
 import com.truvideo.sdk.media.model.TruvideoSdkMediaFileUploadStatus
 import com.truvideo.sdk.media.model.TruvideoSdkMediaResponse
-import com.truvideo.sdk.media.model.TruvideoSdkPaginatedResponse
+import com.truvideo.sdk.media.model.TruvideoSdkMediaPaginatedResponse
 
 interface TruvideoSdkMediaFileUploadRequestRepository {
 
@@ -41,7 +41,7 @@ interface TruvideoSdkMediaFileUploadRequestRepository {
         type: String?,
         pageNumber: Int?,
         size: Int?
-    ): TruvideoSdkPaginatedResponse<TruvideoSdkMediaResponse>
+    ): TruvideoSdkMediaPaginatedResponse<TruvideoSdkMediaResponse>
 
     suspend fun streamById(id: String): LiveData<TruvideoSdkMediaFileUploadRequest?>
 

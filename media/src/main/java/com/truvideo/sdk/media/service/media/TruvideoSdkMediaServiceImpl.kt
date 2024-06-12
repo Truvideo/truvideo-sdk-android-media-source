@@ -5,7 +5,7 @@ import com.truvideo.sdk.media.exception.TruvideoSdkMediaException
 import com.truvideo.sdk.media.interfaces.TruvideoSdkMediaAuthAdapter
 import com.truvideo.sdk.media.model.TruVideoSdkMediaFileUploadResponse
 import com.truvideo.sdk.media.model.TruvideoSdkMediaResponse
-import com.truvideo.sdk.media.model.TruvideoSdkPaginatedResponse
+import com.truvideo.sdk.media.model.TruvideoSdkMediaPaginatedResponse
 import org.json.JSONArray
 import org.json.JSONObject
 import truvideo.sdk.common.exception.TruvideoSdkException
@@ -68,7 +68,7 @@ internal class TruvideoSdkMediaServiceImpl(
         type: String?,
         pageNumber: Int?,
         size: Int?
-    ): TruvideoSdkPaginatedResponse<TruvideoSdkMediaResponse> {
+    ): TruvideoSdkMediaPaginatedResponse<TruvideoSdkMediaResponse> {
         authAdapter.validateAuthentication()
         authAdapter.refresh()
 
@@ -112,7 +112,7 @@ internal class TruvideoSdkMediaServiceImpl(
             mediaList.add(mediaFileUploaded)
         }
 
-        return TruvideoSdkPaginatedResponse(
+        return TruvideoSdkMediaPaginatedResponse(
             data = mediaList,
             totalPages = json.getInt("totalPages"),
             totalElements = json.getInt("totalElements"),

@@ -1,6 +1,6 @@
 package com.truvideo.sdk.media.model
 
-class TruvideoSdkPaginatedResponse<T>(
+class TruvideoSdkMediaPaginatedResponse<T>(
     val data: List<T>,
     val totalPages: Int,
     val totalElements: Int,

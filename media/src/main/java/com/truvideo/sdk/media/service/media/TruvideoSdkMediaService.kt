@@ -2,7 +2,7 @@ package com.truvideo.sdk.media.service.media
 
 import com.truvideo.sdk.media.model.TruVideoSdkMediaFileUploadResponse
 import com.truvideo.sdk.media.model.TruvideoSdkMediaResponse
-import com.truvideo.sdk.media.model.TruvideoSdkPaginatedResponse
+import com.truvideo.sdk.media.model.TruvideoSdkMediaPaginatedResponse
 
 internal interface TruvideoSdkMediaService {
     suspend fun createMedia(
@@ -20,5 +20,5 @@ internal interface TruvideoSdkMediaService {
         type: String?,
         pageNumber: Int? = 0,
         size: Int?
-    ): TruvideoSdkPaginatedResponse<TruvideoSdkMediaResponse>
+    ): TruvideoSdkMediaPaginatedResponse<TruvideoSdkMediaResponse>
 }
