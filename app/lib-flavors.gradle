@@ -1,6 +1,9 @@
 android {
     flavorDimensions = ['environments']
     productFlavors {
+        dev {
+            dimension 'environments'
+        }
         beta {
             dimension 'environments'
         }

@@ -49,6 +49,9 @@ android {
     flavorDimensions = ['environments']
 
     productFlavors {
+        dev {
+            dimension 'environments'
+        }
         beta {
             dimension 'environments'
         }
@@ -104,6 +107,8 @@ project.afterEvaluate {
                     artifact bundleBetaReleaseAar
                 } else if (environment == "rc") {
                     artifact bundleRcReleaseAar
+                } else if (environment == "dev") {
+                    artifact bundleDevReleaseAar
                 } else {
                     artifact bundleProdReleaseAar
                 }
