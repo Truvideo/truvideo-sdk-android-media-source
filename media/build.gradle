@@ -49,6 +49,9 @@ android {
     flavorDimensions = ['environments']
 
     productFlavors {
+        dev {
+            dimension 'environments'
+        }
         beta {
             dimension 'environments'
         }
@@ -99,12 +102,22 @@ project.afterEvaluate {
                 version android.defaultConfig.versionName
 
                 def environment = properties.getProperty("environment")
-                if (environment == "beta") {
-                    artifact bundleBetaReleaseAar
-                } else if (environment == "rc") {
-                    artifact bundleRcReleaseAar
-                } else {
-                    artifact bundleProdReleaseAar
+                switch (environment) {
+                    case 'dev':
+                        artifact bundleDevReleaseAar
+                        break
+
+                    case 'beta':
+                        artifact bundleBetaReleaseAar
+                        break
+
+                    case 'rc':
+                        artifact bundleRcReleaseAar
+                        break
+
+                    case 'prod':
+                        artifact bundleProdReleaseAar
+                        break
                 }
 
                 pom.withXml {
