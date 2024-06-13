@@ -6,7 +6,6 @@ import com.truvideo.sdk.media.interfaces.TruvideoSdkMediaAuthAdapter
 import com.truvideo.sdk.media.model.TruVideoSdkMediaFileUploadResponse
 import org.json.JSONObject
 import truvideo.sdk.common.exception.TruvideoSdkException
-import truvideo.sdk.common.model.baseUrl
 import truvideo.sdk.common.sdk_common
 
 internal class TruvideoSdkMediaServiceImpl(

@@ -15,7 +15,6 @@ import androidx.compose.ui.unit.dp
 import com.truvideo.media.app.ui.activities.main_activity.MainActivity
 import com.truvideo.media.app.ui.theme.TruvideosdkmediaTheme
 import com.truvideo.sdk.components.login.TruvideoLoginComponent
-import com.truvideo.sdk.core.TruvideoSdk
 import truvideo.sdk.common.model.TruvideoSdkEnvironment
 import truvideo.sdk.common.sdk_common
 
@@ -23,8 +22,8 @@ class LoginActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        TruvideoSdk.clearAuthentication()
-        sdk_common.configuration.environment = TruvideoSdkEnvironment.RC
+        sdk_common.auth.clear()
+        sdk_common.configuration.environment = TruvideoSdkEnvironment.PROD
 
         setContent {
             TruvideosdkmediaTheme {
@@ -41,19 +40,26 @@ class LoginActivity : ComponentActivity() {
     @Composable
     fun Content() {
         val apiKey = when (sdk_common.configuration.environment) {
+            TruvideoSdkEnvironment.DEV -> ""
             TruvideoSdkEnvironment.BETA -> "VS2SG9WK"
 //            TruvideoSdkEnvironment.RC -> "VS2SG9WK" // Ours
-            TruvideoSdkEnvironment.RC -> "0EeGlpbESu" // Reynolds
+//            TruvideoSdkEnvironment.RC -> "0EeGlpbESu" // Reynolds
+            TruvideoSdkEnvironment.RC -> "Fm1tIv3M1h" // COX
+
 //            TruvideoSdkEnvironment.PROD -> "EPhPPsbv7e" // ours
             TruvideoSdkEnvironment.PROD -> "5esxyUUl0t" // Reynolds
+            else -> ""
         }
 
         val secret = when (sdk_common.configuration.environment) {
+            TruvideoSdkEnvironment.DEV -> ""
             TruvideoSdkEnvironment.BETA -> "ST2K33GR"
 //            TruvideoSdkEnvironment.RC -> "ST2K33GR" // Ours
-            TruvideoSdkEnvironment.RC -> "QDjx0T9RyD" // Reynolds
+//            TruvideoSdkEnvironment.RC -> "QDjx0T9RyD" // Reynolds
+            TruvideoSdkEnvironment.RC -> "J0e9AcUwI9" // COX
 //            TruvideoSdkEnvironment.PROD -> "9lHCnkfeLl" // Ours
             TruvideoSdkEnvironment.PROD -> "PCRE0bdAce" // Reynolds
+            else -> ""
         }
 
         Box(
@@ -64,11 +70,11 @@ class LoginActivity : ComponentActivity() {
             TruvideoLoginComponent(
                 apiKey = apiKey,
                 secret = secret,
-                isAuthenticated = { TruvideoSdk.isAuthenticated },
-                isAuthenticationExpired = { TruvideoSdk.isAuthenticationExpired },
-                generatePayload = { TruvideoSdk.generatePayload() },
-                authenticate = { apiKey, payload, secret -> TruvideoSdk.authenticate(apiKey, payload, secret) },
-                init = { TruvideoSdk.initAuthentication() },
+                isAuthenticated = { sdk_common.auth.isAuthenticated.value },
+                isAuthenticationExpired = { sdk_common.auth.isAuthenticationExpired.value },
+                generatePayload = { sdk_common.auth.generatePayload() },
+                authenticate = { apiKey, payload, secret -> sdk_common.auth.authenticate(apiKey, payload, secret) },
+                init = { sdk_common.auth.init() },
                 callback = {
                     val intent = Intent(applicationContext, MainActivity::class.java)
                     startActivity(intent)
