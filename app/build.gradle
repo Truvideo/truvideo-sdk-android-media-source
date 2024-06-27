@@ -82,6 +82,8 @@ dependencies {
 
     // Truvideo SDK
     implementation(project(":media"))
-    implementation 'com.github.Truvideo:truvideo-sdk-android-components:0.1.17'
+    implementation 'com.github.Truvideo:truvideo-sdk-android-components:0.1.18'
     implementation 'com.github.Truvideo:truvideo-sdk-android-common:0.0.72'
+    implementation 'com.github.Truvideo:truvideo-sdk-android-core:72.1.1-dev.95'
+
 }

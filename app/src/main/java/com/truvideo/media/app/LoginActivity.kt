@@ -47,7 +47,9 @@ class LoginActivity : ComponentActivity() {
             TruvideoSdkEnvironment.RC -> "Fm1tIv3M1h" // COX
 
 //            TruvideoSdkEnvironment.PROD -> "EPhPPsbv7e" // ours
-            TruvideoSdkEnvironment.PROD -> "5esxyUUl0t" // Reynolds
+//            TruvideoSdkEnvironment.PROD -> "5esxyUUl0t" // Reynolds
+            TruvideoSdkEnvironment.PROD -> "KFdq0Z9mws" // Reynolds Dev
+
             else -> ""
         }
 
@@ -58,7 +60,8 @@ class LoginActivity : ComponentActivity() {
 //            TruvideoSdkEnvironment.RC -> "QDjx0T9RyD" // Reynolds
             TruvideoSdkEnvironment.RC -> "J0e9AcUwI9" // COX
 //            TruvideoSdkEnvironment.PROD -> "9lHCnkfeLl" // Ours
-            TruvideoSdkEnvironment.PROD -> "PCRE0bdAce" // Reynolds
+//            TruvideoSdkEnvironment.PROD -> "PCRE0bdAce" // Reynolds
+            TruvideoSdkEnvironment.PROD -> "uv6hqwYwvf" // Reynolds dev
             else -> ""
         }
 
